@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theatre Dashboard - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theatre_dashboard.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">Book<span>Now</span></a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="#movies">Movies</a></li>
+                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-auth">
+                <span class="welcome-text">Welcome, {{ user.username }}!</span>
+                <div class="profile-dropdown">
+                    <button class="profile-icon" id="profileToggle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="8" r="3"></circle>
+                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="profileMenu">
+                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                            <span class="dropdown-icon">👤</span>
+                            My Profile
+                        </a>
+                        <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
+                            <span class="dropdown-icon">🎟️</span>
+                            My Bookings
+                        </a>
+                        <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                            <span class="dropdown-icon">⚙️</span>
+                            Settings
+                        </a>
+                        <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                            <span class="dropdown-icon">📊</span>
+                            Theatre Dashboard
+                        </a>
+                        <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🎬</span>
+                            Add Movie
+                        </a>
+                        {% if user.email == 'kumawatsonu086@gmail.com' %}
+                            <a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🛡️</span>
+                                Admin Panel
+                            </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🚪</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Dashboard Section -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="settings-header">
+                <h1>🎬 Theatre Dashboard</h1>
+                <p>Manage your movies and view statistics</p>
+            </div>
+
+            <!-- Theatre Info Card -->
+            <div class="profile-card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h3>🏢 {{ theatre.name }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="theatre-dashboard-info">
+                        <div class="info-item">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">{{ theatre.city }}, {{ theatre.state }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">{{ theatre.theatre_type }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Screens</span>
+                            <span class="info-value">{{ total_screens }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Total Showtimes</span>
+                            <span class="info-value">{{ total_showtimes }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">🎥</div>
+                    <div class="stat-info">
+                        <h4>Total Movies</h4>
+                        <p class="stat-number">{{ total_movies }}</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎟️</div>
+                    <div class="stat-info">
+                        <h4>Total Bookings</h4>
+                        <p class="stat-number">{{ total_bookings }}</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h4>Revenue</h4>
+                        <p class="stat-number">₹0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-info">
+                        <h4>Avg Rating</h4>
+                        <p class="stat-number">N/A</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movies List -->
+            <div class="profile-card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>🎬 Your Movies</h3>
+                    <a href="{{ url_for('movie.add_movie') }}" class="btn btn-primary">+ Add New Movie</a>
+                </div>
+                <div class="card-body">
+                    {% if my_movies %}
+                        <div class="movies-table-container">
+                            <table class="movies-table">
+                                <thead>
+                                    <tr>
+                                        <th>Poster</th>
+                                        <th>Title</th>
+                                        <th>Genre</th>
+                                        <th>Language</th>
+                                        <th>Duration</th>
+                                        <th>Release Date</th>
+                                        <th>Price</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for movie in my_movies %}
+                                    <tr>
+                                        <td>
+                                            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="movie-thumbnail">
+                                        </td>
+                                        <td>
+                                            <strong>{{ movie.title }}</strong>
+                                            <br>
+                                            <small style="color: var(--text-dark); opacity: 0.7;">{{ movie.director }}</small>
+                                        </td>
+                                        <td><span class="badge">{{ movie.genre }}</span></td>
+                                        <td>{{ movie.language }}</td>
+                                        <td>{{ movie.duration }} min</td>
+                                        <td>{{ movie.release_date }}</td>
+                                        <td><strong>₹{{ movie.ticket_price }}</strong></td>
+                                        <td>
+                                            <div class="action-btns">
+                                                <a href="{{ url_for('movie.movie_details', movie_id=movie._id) }}" class="btn-sm btn-info" title="View Details">👁️ View</a>
+                                                <button class="btn-sm btn-warning" onclick="editMovie('{{ movie._id }}')" title="Edit">✏️ Edit</button>
+                                                <button class="btn-sm btn-danger" onclick="deleteMovie('{{ movie._id }}', '{{ movie.title }}')" title="Delete">🗑️ Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">🎬</div>
+                            <h4>No Movies Added Yet</h4>
+                            <p>Start by adding your first movie to the platform</p>
+                            <a href="{{ url_for('movie.add_movie') }}" class="btn btn-primary" style="margin-top: 1rem;">Add Your First Movie</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theatre_dashboard.js') }}"></script>
+</body>
+</html>

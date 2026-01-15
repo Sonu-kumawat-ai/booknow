@@ -1,0 +1,223 @@
+/* Booking Confirmation Page Styles */
+
+.ticket-container {
+    max-width: 700px;
+    margin: 100px auto 50px;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-badge {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--success);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 15px;
+    animation: scaleIn 0.5s ease-out 0.2s both;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.success-badge h1 {
+    color: var(--success);
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.success-badge p {
+    color: var(--text-dark);
+    opacity: 0.7;
+}
+
+.ticket {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    position: relative;
+}
+
+.ticket::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-yellow));
+}
+
+.ticket-header {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    color: var(--text-light);
+    padding: 30px;
+    text-align: center;
+}
+
+.ticket-header h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.ticket-header .booking-id {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.ticket-body {
+    padding: 30px;
+}
+
+.movie-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 2px dashed var(--border);
+}
+
+.movie-info img {
+    width: 100px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.movie-details {
+    flex: 1;
+}
+
+.movie-details h3 {
+    color: var(--text-dark);
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: var(--text-dark);
+}
+
+.info-row svg {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-red);
+}
+
+.booking-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    background: var(--bg-light);
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary-red);
+}
+
+.detail-item label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dark);
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.detail-item .value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.seats-display {
+    grid-column: 1 / -1;
+}
+
+.seats-display .value {
+    color: var(--primary-red);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    color: var(--text-light);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--text-dark);
+    border: 2px solid var(--border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+}
+
+.note {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--light-yellow);
+    border-radius: var(--radius-sm);
+    color: var(--text-dark);
+    font-size: 14px;
+}

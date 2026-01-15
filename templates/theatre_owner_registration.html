@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theatre Owner Registration - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theatre_owner_registration.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">Book<span>Now</span></a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="#movies">Movies</a></li>
+                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-auth">
+                {% if user %}
+                    <span class="welcome-text">Welcome, {{ user.username }}!</span>
+                    <div class="profile-dropdown">
+                        <button class="profile-icon" id="profileToggle">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="8" r="3"></circle>
+                                <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                My Profile
+                            </a>
+                            <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
+                                <span class="dropdown-icon">🎟️</span>
+                                My Bookings
+                            </a>
+                            <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                Settings
+                            </a>
+                            {% if user.role == 'theatre_owner' or user.role == 'admin' %}
+                                <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">🎬</span>
+                                    Add Movie
+                                </a>
+                            {% endif %}
+                            {% if user.email == 'kumawatsonu086@gmail.com' %}
+                                <a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">🛡️</span>
+                                    Admin Panel
+                                </a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Registration Form -->
+    <section class="section-padding">
+        <div class="container-small">
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3>🎬 Theatre Owner Registration</h3>
+                    <p style="font-size: 0.95rem; color: var(--text-dark); opacity: 0.8; margin-top: 0.5rem;">
+                        Please provide your theatre information for admin approval
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('theatre.become_theatre_owner') }}" class="registration-form">
+                        <!-- Theatre Information -->
+                        <div class="form-section">
+                            <h4 class="section-title">🏢 Theatre Information</h4>
+                                
+                                <div class="form-group">
+                                    <label for="theatre_name">Theatre Name *</label>
+                                    <input type="text" id="theatre_name" name="theatre_name" placeholder="e.g., PVR Cinemas, INOX" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="theatre_address">Theatre Address *</label>
+                                    <textarea id="theatre_address" name="theatre_address" rows="3" placeholder="Enter complete address with landmark" required></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="city">City *</label>
+                                        <input type="text" id="city" name="city" placeholder="e.g., Mumbai" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="state">State *</label>
+                                        <input type="text" id="state" name="state" placeholder="e.g., Maharashtra" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="pincode">Pincode *</label>
+                                        <input type="text" id="pincode" name="pincode" placeholder="6-digit pincode" pattern="[0-9]{6}" maxlength="6" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="phone">Contact Phone *</label>
+                                        <input type="tel" id="phone" name="phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Facility Details -->
+                            <div class="form-section">
+                                <h4 class="section-title">🎯 Facility Details</h4>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="theatre_type">Theatre Type *</label>
+                                        <select id="theatre_type" name="theatre_type" required>
+                                            <option value="">Select type</option>
+                                            <option value="Multiplex">Multiplex</option>
+                                            <option value="Single Screen">Single Screen</option>
+                                            <option value="Drive-In">Drive-In</option>
+                                            <option value="IMAX">IMAX</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="total_screens">Total Screens *</label>
+                                        <input type="number" id="total_screens" name="total_screens" placeholder="Number of screens" min="1" max="50" required>
+                                        <small>Number of movie screens in your theatre</small>
+                                    </div>
+                                </div>
+
+                                <div id="screensContainer" class="screens-container" style="display: none;">
+                                    <label>Screen Seat Capacities *</label>
+                                    <div id="screenInputs" class="screen-inputs"></div>
+                                    <small>Enter seating capacity for each screen</small>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="parking_capacity">Parking Capacity</label>
+                                        <input type="number" id="parking_capacity" name="parking_capacity" placeholder="Number of parking spots" min="0">
+                                        <small>Optional - leave blank if not applicable</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Available Amenities</label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="Parking">
+                                            <span>Parking</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="Food Court">
+                                            <span>Food Court</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="Wheelchair Access">
+                                            <span>Wheelchair Access</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="3D Screens">
+                                            <span>3D Screens</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="Dolby Atmos">
+                                            <span>Dolby Atmos</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="amenities" value="Recliner Seats">
+                                            <span>Recliner Seats</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Business Information -->
+                            <div class="form-section">
+                                <h4 class="section-title">📄 Business Information</h4>
+                                
+                                <div class="form-group">
+                                    <label for="license_number">Theatre License Number</label>
+                                    <input type="text" id="license_number" name="license_number" placeholder="Enter your theatre license number">
+                                    <small>Optional - helps in faster verification</small>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="established_year">Year Established</label>
+                                        <input type="number" id="established_year" name="established_year" placeholder="e.g., 2015" min="1900" max="2026">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="website">Website URL</label>
+                                        <input type="url" id="website" name="website" placeholder="https://www.example.com">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="operating_hours">Operating Hours</label>
+                                    <input type="text" id="operating_hours" name="operating_hours" placeholder="e.g., 9:00 AM - 12:00 AM">
+                                    <small>Typical daily operating hours</small>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Submit -->
+                            <div class="form-section">
+                                <div class="terms-box">
+                                    <p><strong>📋 Important Information:</strong></p>
+                                    <ul>
+                                        <li>All information will be verified by our admin team</li>
+                                        <li>Approval process typically takes 24-48 hours</li>
+                                        <li>You'll receive a notification once approved</li>
+                                        <li>Make sure all details are accurate and complete</li>
+                                    </ul>
+                                </div>
+
+                                <div class="form-actions">
+                                    <a href="{{ url_for('user.settings') }}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Submit Registration</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theatre_owner_registration.js') }}"></script>
+</body>
+</html>

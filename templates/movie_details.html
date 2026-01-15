@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.title }} - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/movie_details.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="{{ url_for('main.index') }}" class="logo-link">Book<span>Now</span></a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-auth">
+                {% if logged_in %}
+                    <span class="welcome-text">Welcome, {{ username }}!</span>
+                    <div class="profile-dropdown">
+                        <button class="profile-icon" id="profileToggle">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="8" r="3"></circle>
+                                <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="profileMenu">
+                            <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                My Profile
+                            </a>
+                            <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
+                                <span class="dropdown-icon">🎟️</span>
+                                My Bookings
+                            </a>
+                            <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                Settings
+                            </a>
+                            {% if user_data and (user_data.role == 'theatre_owner' or user_data.role == 'admin') %}
+                                <div class="dropdown-divider"></div>
+                                <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">📊</span>
+                                    Theatre Dashboard
+                                </a>
+                                <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">🎬</span>
+                                    Add Movie
+                                </a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Movie Details Section -->
+    <section class="movie-details-section">
+        <div class="movie-backdrop" data-poster="{{ movie.poster_url }}"></div>
+        
+        <div class="container">
+            <div class="movie-details-container">
+                <!-- Movie Poster -->
+                <div class="movie-details-poster">
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                </div>
+
+                <!-- Movie Info -->
+                <div class="movie-details-info">
+                    <h1 class="movie-title">{{ movie.title }}</h1>
+                    
+                    <div class="movie-badges">
+                        {% if movie.certificate %}
+                        <span class="badge-cert">{{ movie.certificate }}</span>
+                        {% endif %}
+                        <span class="badge-genre">{{ movie.genre }}</span>
+                        <span class="badge-lang">{{ movie.language }}</span>
+                        {% if movie.screen_type %}
+                        <span class="badge-screen">{{ movie.screen_type }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="movie-meta-info">
+                        {% if movie.duration %}
+                        <span>⏱️ {{ movie.duration }} minutes</span>
+                        {% endif %}
+                        {% if movie.release_date %}
+                        <span>📅 {{ movie.release_date }}</span>
+                        {% endif %}
+                        {% if movie.ticket_price %}
+                        <span>💰 ₹{{ movie.ticket_price }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if movie.description %}
+                    <div class="movie-description">
+                        <h3>Synopsis</h3>
+                        <p>{{ movie.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="movie-credits">
+                        {% if movie.director %}
+                        <div class="credit-item">
+                            <span class="credit-label">Director</span>
+                            <span class="credit-value">{{ movie.director }}</span>
+                        </div>
+                        {% endif %}
+                        {% if movie.cast %}
+                        <div class="credit-item">
+                            <span class="credit-label">Cast</span>
+                            <span class="credit-value">{{ movie.cast }}</span>
+                        </div>
+                        {% endif %}
+                        {% if movie.theatre_name %}
+                        <div class="credit-item">
+                            <span class="credit-label">Theatre</span>
+                            <span class="credit-value">{{ movie.theatre_name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="movie-actions">
+                        {% if movie.trailer_url %}
+                        <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-outline btn-large">▶️ Watch Trailer</a>
+                        {% endif %}
+                    </div>
+
+                    {% if theatres and theatres|length > 0 %}
+                    <div class="showtimes-section">
+                        <h3>Available in These Theatres</h3>
+                        <div class="showtimes-grid">
+                            {% for theatre in theatres %}
+                            <div class="showtime-card">
+                                <div class="showtime-info">
+                                    <h4>{{ theatre.theatre_name }}</h4>
+                                    <p class="showtime-location">📍 {{ theatre.theatre_city }}</p>
+                                    {% if theatre.theatre_address %}
+                                    <p class="showtime-address">{{ theatre.theatre_address }}</p>
+                                    {% endif %}
+                                    <p class="showtime-count">🎬 {{ theatre.showtimes|length }} show(s) available</p>
+                                </div>
+                                {% if theatre.showtimes %}
+                                <button class="btn btn-primary" 
+                                        data-theatre-name="{{ theatre.theatre_name }}" 
+                                        data-showtimes='{{ theatre.showtimes|tojson }}' 
+                                        onclick="showTimesModal(this)">View Showtimes</button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-showtimes">
+                        <p>No showtimes available for this movie yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Related Movies Section -->
+    {% if related_movies %}
+    <section class="related-movies-section">
+        <div class="container">
+            <h2>More {{ movie.genre }} Movies</h2>
+            <div class="movies-grid">
+                {% for related in related_movies %}
+                <div class="movie-card">
+                    <div class="movie-poster">
+                        <img src="{{ related.poster_url }}" alt="{{ related.title }}">
+                        <div class="movie-overlay">
+                            <a href="{{ url_for('movie.movie_details', movie_id=related._id) }}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3>{{ related.title }}</h3>
+                        <div class="movie-meta">
+                            <span class="genre">{{ related.genre }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Book<span>Now</span></h3>
+                    <p>Your ultimate destination for hassle-free movie ticket booking. Experience cinema like never before.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">📘</a>
+                        <a href="#" class="social-icon">🐦</a>
+                        <a href="#" class="social-icon">📷</a>
+                        <a href="#" class="social-icon">▶️</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                        <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
+                        <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul>
+                        <li>📧 support@booknow.com</li>
+                        <li>📞 +1 (555) 123-4567</li>
+                        <li>📍 123 Movie Street, Cinema City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 BookNow. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Showtime Selection Modal -->
+    <div id="showtimeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTheatreName">Select Showtime</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="showtimesContainer" class="showtimes-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/movie_details.js') }}"></script>
+</body>
+</html>

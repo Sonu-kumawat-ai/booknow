@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking_confirmation.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="{{ url_for('main.index') }}" style="color: inherit; text-decoration: none;">Book<span>Now</span></a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('user.profile') }}">My Bookings</a></li>
+            </ul>
+            <div class="nav-auth">
+                <span class="welcome-text">Welcome, {{ username }}!</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Ticket Container -->
+    <div class="ticket-container">
+        <div class="success-badge">
+            <div class="success-icon">✓</div>
+            <h1>Booking Confirmed!</h1>
+            <p>Your ticket has been booked successfully</p>
+        </div>
+
+        <div class="ticket">
+            <div class="ticket-header">
+                <h2>🎬 Movie Ticket</h2>
+                <p class="booking-id">Booking ID: {{ booking._id }}</p>
+            </div>
+
+            <div class="ticket-body">
+                <div class="movie-info">
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                    <div class="movie-details">
+                        <h3>{{ movie.title }}</h3>
+                        <div class="info-row">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span><strong>Theatre:</strong> {{ theatre.name }}</span>
+                        </div>
+                        <div class="info-row">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{{ theatre.city }}, {{ theatre.state }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <label>Booking Date</label>
+                        <div class="value">{{ booking.booking_date.strftime('%d %b %Y') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Show Date</label>
+                        <div class="value">{{ booking.show_date }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Show Time</label>
+                        <div class="value">{{ booking.show_time }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Number of Tickets</label>
+                        <div class="value">{{ booking.seats|length }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Payment Status</label>
+                        <div class="value">{{ booking.payment_status|upper }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Amount</label>
+                        <div class="value">₹{{ booking.amount }}</div>
+                    </div>
+                    <div class="detail-item seats-display">
+                        <label>Seat Numbers</label>
+                        <div class="value">{{ booking.seats|join(', ') }}</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="{{ url_for('user.profile') }}" class="btn btn-secondary">View All Bookings</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Book More Tickets</a>
+                </div>
+
+                <div class="note">
+                    📧 A confirmation email has been sent to your registered email address
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+</body>
+</html>

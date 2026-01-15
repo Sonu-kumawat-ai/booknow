@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{{ url_for('main.index') }}">
+                    <h1>Book<span>Now</span></h1>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin.admin') }}" class="active">Admin</a></li>
+            </ul>
+            <div class="nav-auth">
+                <span class="admin-badge">👑 Admin</span>
+                <div class="profile-dropdown">
+                    <button class="profile-icon active" id="profileToggle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="8" r="3"></circle>
+                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="profileMenu">
+                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                            <span class="dropdown-icon">👤</span>
+                            My Profile
+                        </a>
+                        <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                            <span class="dropdown-icon">⚙️</span>
+                            Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🚪</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="close-flash">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Admin Dashboard -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="settings-header">
+                <h1>👑 Admin Dashboard</h1>
+                <p>Manage theatre owner requests and platform content</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="admin-stats">
+                <div class="admin-stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h4>Total Users</h4>
+                        <p class="stat-number">{{ total_users }}</p>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-icon">🎬</div>
+                    <div class="stat-info">
+                        <h4>Theatre Owners</h4>
+                        <p class="stat-number">{{ theatre_owners|length }}</p>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-icon">🎥</div>
+                    <div class="stat-info">
+                        <h4>Total Movies</h4>
+                        <p class="stat-number">{{ all_movies|length }}</p>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h4>Pending Requests</h4>
+                        <p class="stat-number">{{ pending_requests|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Theatre Owner Requests -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3>⏳ Pending Theatre Owner Requests</h3>
+                </div>
+                <div class="card-body">
+                    {% if pending_requests %}
+                        {% for request in pending_requests %}
+                        <div class="request-detail-card">
+                            <div class="request-header">
+                                <div class="request-user-info">
+                                    <h4>{{ request.username }}</h4>
+                                    <p>{{ request.email }}</p>
+                                    <span class="request-date">Requested: {{ request.applied_date.strftime('%B %d, %Y') if request.applied_date else 'N/A' }}</span>
+                                </div>
+                                <div class="request-actions">
+                                    <form method="POST" action="{{ url_for('admin.approve_theatre_owner', application_id=request._id) }}" style="display: inline;">
+                                        <button type="submit" class="btn-sm btn-success">✓ Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.reject_theatre_owner', application_id=request._id) }}" style="display: inline;">
+                                        <button type="submit" class="btn-sm btn-danger">✗ Reject</button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="theatre-details">
+                                <h5>🎬 Theatre Information</h5>
+                                <div class="theatre-info-grid">
+                                    <div class="info-item">
+                                        <label>Theatre Name</label>
+                                        <p>{{ request.theatre_name }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Address</label>
+                                        <p>{{ request.theatre_address }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>City</label>
+                                        <p>{{ request.city }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>State</label>
+                                        <p>{{ request.state }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Pincode</label>
+                                        <p>{{ request.pincode }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Contact Phone</label>
+                                        <p>{{ request.phone }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Total Screens</label>
+                                        <p>{{ request.total_screens }}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Seating Capacity</label>
+                                        <p>{{ request.seating_capacity }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h4>No Pending Requests</h4>
+                            <p>All theatre owner requests have been processed</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Current Theatre Owners -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3>🎬 Current Theatre Owners</h3>
+                </div>
+                <div class="card-body">
+                    {% if theatre_owners %}
+                        <div class="owners-grid">
+                            {% for owner in theatre_owners %}
+                            <div class="owner-card">
+                                <div class="owner-main-info">
+                                    <div class="owner-avatar">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <circle cx="12" cy="8" r="3"></circle>
+                                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="owner-info">
+                                        <h4>{{ owner.owner_name }}</h4>
+                                        <p>{{ owner.owner_email }}</p>
+                                        <small class="theatre-name">🏢 {{ owner.name }}</small>
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ url_for('admin.remove_theatre_owner', theatre_id=owner._id) }}" onsubmit="return confirm('Are you sure you want to remove theatre owner status from {{ owner.owner_name }}?');">
+                                    <button type="submit" class="btn-sm btn-danger">✗ Remove</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">🎬</div>
+                            <h4>No Theatre Owners Yet</h4>
+                            <p>No theatre owners have been approved</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- All Movies -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3>🎥 All Movies on Platform</h3>
+                </div>
+                <div class="card-body">
+                    {% if all_movies %}
+                        <div class="movies-grid">
+                            {% for movie in all_movies %}
+                            <div class="movie-card">
+                                <div class="movie-poster">
+                                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                                </div>
+                                <div class="movie-info">
+                                    <h3>{{ movie.title }}</h3>
+                                    <div class="movie-meta">
+                                        <span class="rating">⭐ {{ movie.rating }}</span>
+                                        <span class="genre">{{ movie.genre }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">🎥</div>
+                            <h4>No Movies Available</h4>
+                            <p>No movies have been added to the platform yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Book<span>Now</span></h3>
+                    <p>Your ultimate destination for hassle-free movie ticket booking. Experience cinema like never before.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">📘</a>
+                        <a href="#" class="social-icon">🐦</a>
+                        <a href="#" class="social-icon">📷</a>
+                        <a href="#" class="social-icon">▶️</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                        <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
+                        <li><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul>
+                        <li>📧 support@booknow.com</li>
+                        <li>📞 +1 (555) 123-4567</li>
+                        <li>📍 123 Movie Street, Cinema City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 BookNow. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

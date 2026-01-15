@@ -1,0 +1,301 @@
+﻿/* Profile Page */
+.profile-section {
+    padding: 100px 20px 100px;
+    min-height: 100vh;
+    background: var(--bg-light);
+}
+
+.profile-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    max-width: var(--container-width);
+    margin: 0 auto;
+}
+
+.profile-sidebar {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+}
+
+.profile-avatar {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.avatar-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-yellow));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: var(--text-light);
+}
+
+.profile-avatar h2 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.profile-email {
+    color: var(--text-dark);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: var(--transition);
+}
+
+.profile-menu-item:hover,
+.profile-menu-item.active {
+    background: var(--light-yellow);
+    color: var(--dark-red);
+}
+
+.menu-icon {
+    font-size: 1.5rem;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.profile-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.info-item p {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.status-badge.active,
+.status-badge.success {
+    background: var(--success);
+    color: var(--text-light);
+}
+
+.status-badge.pending {
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+}
+
+/* Bookings List */
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.booking-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.booking-item:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-red);
+}
+
+.booking-poster {
+    flex-shrink: 0;
+}
+
+.booking-poster img {
+    width: 80px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.booking-details {
+    flex: 1;
+}
+
+.booking-details h4 {
+    font-size: 1.3rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.theatre-name {
+    color: var(--text-dark);
+    opacity: 0.7;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.booking-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.info-badge {
+    background: var(--surface);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    border: 1px solid var(--border);
+}
+
+.seats-info {
+    color: var(--primary-red);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.booking-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.booking-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-red);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    opacity: 0.7;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .booking-item {
+        flex-direction: column;
+    }
+    
+    .booking-poster img {
+        width: 100%;
+        height: auto;
+        max-width: 200px;
+    }
+    
+    .booking-actions {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+
+@media (max-width: 968px) {
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-sidebar {
+        position: relative;
+        top: 0;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

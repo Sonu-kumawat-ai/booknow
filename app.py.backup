@@ -1,0 +1,598 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_pymongo import PyMongo
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import os
+import razorpay
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
+
+# MongoDB Atlas Configuration
+app.config["MONGO_URI"] = os.getenv('MONGODB_URI')
+mongo = PyMongo(app)
+
+# Razorpay Configuration
+razorpay_client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
+
+@app.route('/')
+def index():
+    """Home page route"""
+    user_logged_in = 'user_id' in session
+    username = session.get('username', '')
+    # Fetch movies from database
+    movies = list(mongo.db.movies.find())
+    
+    # Get user data if logged in
+    user_data = None
+    if user_logged_in:
+        user_data = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    
+    return render_template('index.html', logged_in=user_logged_in, username=username, movies=movies, user_data=user_data)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Registration page route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Validation
+        if not username or not email or not password:
+            flash('All fields are required!', 'error')
+            return render_template('register.html')
+        
+        if password != confirm_password:
+            flash('Passwords do not match!', 'error')
+            return render_template('register.html')
+        
+        # Check if user already exists
+        existing_user = mongo.db.users.find_one({'$or': [{'email': email}, {'username': username}]})
+        if existing_user:
+            flash('Username or email already exists!', 'error')
+            return render_template('register.html')
+        
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        user_data = {
+            'username': username,
+            'email': email,
+            'password': hashed_password,
+            'created_at': datetime.utcnow()
+        }
+        
+        mongo.db.users.insert_one(user_data)
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page route"""
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Validation
+        if not email or not password:
+            flash('Email and password are required!', 'error')
+            return render_template('login.html')
+        
+        # Find user
+        user = mongo.db.users.find_one({'email': email})
+        
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = str(user['_id'])
+            session['username'] = user['username']
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid email or password!', 'error')
+            return render_template('login.html')
+    
+    return render_template('login.html')
+
+@app.route('/profile')
+def profile():
+    """Profile page route"""
+    if 'user_id' not in session:
+        flash('Please login to view your profile.', 'error')
+        return redirect(url_for('login'))
+    
+    # Fetch user data
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user:
+        session.clear()
+        flash('User not found. Please login again.', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template('profile.html', user=user, user_data=user)
+
+@app.route('/settings')
+def settings():
+    """Settings page route"""
+    if 'user_id' not in session:
+        flash('Please login to access settings.', 'error')
+        return redirect(url_for('login'))
+    
+    # Fetch user data
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user:
+        session.clear()
+        flash('User not found. Please login again.', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template('settings.html', user=user, user_data=user)
+
+@app.route('/theatre-owner-registration')
+def theatre_owner_registration():
+    """Theatre owner registration form page"""
+    if 'user_id' not in session:
+        flash('Please login to access this page.', 'error')
+        return redirect(url_for('login'))
+    
+    # Fetch user data
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user:
+        session.clear()
+        flash('User not found. Please login again.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if already a theatre owner
+    if user.get('is_theatre_owner'):
+        flash('You are already a theatre owner.', 'error')
+        return redirect(url_for('settings'))
+    
+    # Check if already has a pending request
+    if user.get('theatre_owner_status') == 'pending':
+        flash('Your request is already pending admin approval.', 'error')
+        return redirect(url_for('settings'))
+    
+    return render_template('theatre_owner_registration.html', user=user, user_data=user)
+
+@app.route('/become-theatre-owner', methods=['POST'])
+def become_theatre_owner():
+    """Request to become a theatre owner - needs admin approval"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if already has a pending request
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if user.get('theatre_owner_status') == 'pending':
+        flash('Your request is already pending admin approval.', 'error')
+        return redirect(url_for('settings'))
+    
+    if user.get('is_theatre_owner'):
+        flash('You are already a theatre owner.', 'error')
+        return redirect(url_for('settings'))
+    
+    # Get form data
+    theatre_name = request.form.get('theatre_name')
+    theatre_address = request.form.get('theatre_address')
+    city = request.form.get('city')
+    state = request.form.get('state')
+    pincode = request.form.get('pincode')
+    phone = request.form.get('phone')
+    theatre_type = request.form.get('theatre_type')
+    total_screens = request.form.get('total_screens')
+    seating_capacity = request.form.get('seating_capacity')
+    parking_capacity = request.form.get('parking_capacity', '0')
+    amenities = request.form.getlist('amenities')
+    license_number = request.form.get('license_number', '')
+    established_year = request.form.get('established_year', '')
+    website = request.form.get('website', '')
+    operating_hours = request.form.get('operating_hours', '')
+    
+    # Validation
+    if not all([theatre_name, theatre_address, city, state, pincode, phone, theatre_type, total_screens, seating_capacity]):
+        flash('All required fields must be filled!', 'error')
+        return redirect(url_for('theatre_owner_registration'))
+    
+    # Create theatre info
+    theatre_info = {
+        'theatre_name': theatre_name,
+        'theatre_address': theatre_address,
+        'city': city,
+        'state': state,
+        'pincode': pincode,
+        'phone': phone,
+        'theatre_type': theatre_type,
+        'total_screens': int(total_screens),
+        'seating_capacity': int(seating_capacity),
+        'parking_capacity': int(parking_capacity) if parking_capacity else 0,
+        'amenities': amenities,
+        'license_number': license_number,
+        'established_year': int(established_year) if established_year else None,
+        'website': website,
+        'operating_hours': operating_hours
+    }
+    
+    # Create pending request with theatre info
+    mongo.db.users.update_one(
+        {'_id': __import__('bson').ObjectId(session['user_id'])},
+        {'$set': {
+            'theatre_owner_status': 'pending', 
+            'request_date': datetime.utcnow(),
+            'theatre_info': theatre_info
+        }}
+    )
+    
+    flash('Your request has been submitted! Please wait for admin approval.', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/admin')
+def admin():
+    """Admin dashboard - only for kumawatsonu086@gmail.com"""
+    if 'user_id' not in session:
+        flash('Please login to access admin panel.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is admin
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user or user['email'] != 'kumawatsonu086@gmail.com':
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('index'))
+    
+    # Fetch pending theatre owner requests
+    pending_requests = list(mongo.db.users.find({'theatre_owner_status': 'pending'}))
+    
+    # Fetch all theatre owners
+    theatre_owners = list(mongo.db.users.find({'is_theatre_owner': True}))
+    
+    # Fetch all movies
+    all_movies = list(mongo.db.movies.find())
+    
+    # Fetch all users count
+    total_users = mongo.db.users.count_documents({})
+    
+    return render_template('admin.html', 
+                         user=user,
+                         user_data=user,
+                         pending_requests=pending_requests,
+                         theatre_owners=theatre_owners,
+                         all_movies=all_movies,
+                         total_users=total_users)
+
+@app.route('/admin/approve-theatre-owner/<user_id>', methods=['POST'])
+def approve_theatre_owner(user_id):
+    """Approve theatre owner request"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is admin
+    admin = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not admin or admin['email'] != 'kumawatsonu086@gmail.com':
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('index'))
+    
+    # Approve the user
+    mongo.db.users.update_one(
+        {'_id': __import__('bson').ObjectId(user_id)},
+        {'$set': {'is_theatre_owner': True, 'theatre_owner_status': 'approved', 'approved_date': datetime.utcnow()}}
+    )
+    
+    flash('Theatre owner request approved!', 'success')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/reject-theatre-owner/<user_id>', methods=['POST'])
+def reject_theatre_owner(user_id):
+    """Reject theatre owner request"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is admin
+    admin = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not admin or admin['email'] != 'kumawatsonu086@gmail.com':
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('index'))
+    
+    # Reject the user
+    mongo.db.users.update_one(
+        {'_id': __import__('bson').ObjectId(user_id)},
+        {'$set': {'theatre_owner_status': 'rejected'}, '$unset': {'request_date': ''}}
+    )
+    
+    flash('Theatre owner request rejected.', 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/remove-theatre-owner/<user_id>', methods=['POST'])
+def remove_theatre_owner(user_id):
+    """Remove theatre owner status from a user"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is admin
+    admin = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not admin or admin['email'] != 'kumawatsonu086@gmail.com':
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('index'))
+    
+    # Remove theatre owner status
+    mongo.db.users.update_one(
+        {'_id': __import__('bson').ObjectId(user_id)},
+        {'$set': {'is_theatre_owner': False, 'theatre_owner_status': 'removed'}, '$unset': {'approved_date': ''}}
+    )
+    
+    flash('Theatre owner status removed successfully.', 'success')
+    return redirect(url_for('admin'))
+
+@app.route('/add-movie', methods=['GET', 'POST'])
+def add_movie():
+    """Add movie page route - Only for theatre owners"""
+    if 'user_id' not in session:
+        flash('Please login to add movies.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is theatre owner
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user or not user.get('is_theatre_owner'):
+        flash('You need to be a theatre owner to add movies.', 'error')
+        return redirect(url_for('settings'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        poster_url = request.form.get('poster_url')
+        director = request.form.get('director')
+        cast = request.form.get('cast')
+        duration = request.form.get('duration')
+        release_date = request.form.get('release_date')
+        language = request.form.get('language')
+        genre = request.form.get('genre')
+        certificate = request.form.get('certificate', '')
+        trailer_url = request.form.get('trailer_url', '')
+        ticket_price = request.form.get('ticket_price')
+        screen_type = request.form.get('screen_type', '')
+        total_shows = request.form.get('total_shows')
+        
+        # Collect show times
+        show_times = []
+        if total_shows:
+            for i in range(1, int(total_shows) + 1):
+                show_time = request.form.get(f'show_time_{i}')
+                if show_time:
+                    show_times.append(show_time)
+        
+        # Validation
+        if not all([title, description, poster_url, director, cast, duration, release_date, language, genre, ticket_price, total_shows]):
+            flash('All required fields must be filled!', 'error')
+            return render_template('add_movie.html', user=user)
+        
+        if len(show_times) != int(total_shows):
+            flash('Please provide times for all shows!', 'error')
+            return render_template('add_movie.html', user=user, user_data=user)
+        
+        # Create movie
+        movie_data = {
+            'title': title,
+            'description': description,
+            'poster_url': poster_url,
+            'director': director,
+            'cast': cast,
+            'duration': int(duration),
+            'release_date': release_date,
+            'language': language,
+            'genre': genre,
+            'certificate': certificate,
+            'trailer_url': trailer_url,
+            'ticket_price': int(ticket_price),
+            'screen_type': screen_type,
+            'total_shows': int(total_shows),
+            'show_times': show_times,
+            'added_by': session['user_id'],
+            'theatre_id': str(user['_id']),
+            'theatre_name': user.get('theatre_info', {}).get('theatre_name', 'Unknown Theatre'),
+            'created_at': datetime.utcnow()
+        }
+        
+        mongo.db.movies.insert_one(movie_data)
+        flash('Movie added successfully!', 'success')
+        return redirect(url_for('add_movie'))
+    
+    return render_template('add_movie.html', user=user, user_data=user)
+
+@app.route('/theatre-dashboard')
+def theatre_dashboard():
+    """Theatre owner dashboard to view their movies"""
+    if 'user_id' not in session:
+        flash('Please login to access dashboard.', 'error')
+        return redirect(url_for('login'))
+    
+    # Check if user is theatre owner
+    user = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+    if not user or not user.get('is_theatre_owner'):
+        flash('You need to be a theatre owner to access dashboard.', 'error')
+        return redirect(url_for('settings'))
+    
+    # Fetch movies added by this theatre owner
+    my_movies = list(mongo.db.movies.find({'added_by': session['user_id']}))
+    
+    # Calculate statistics
+    total_movies = len(my_movies)
+    
+    # Get theatre info
+    theatre_info = user.get('theatre_info', {})
+    
+    return render_template('theatre_dashboard.html', 
+                         user=user,
+                         user_data=user,
+                         my_movies=my_movies,
+                         total_movies=total_movies,
+                         theatre_info=theatre_info)
+
+@app.route('/movie/<movie_id>')
+def movie_details(movie_id):
+    """Movie details page"""
+    try:
+        # Fetch movie details
+        movie = mongo.db.movies.find_one({'_id': __import__('bson').ObjectId(movie_id)})
+        
+        if not movie:
+            flash('Movie not found.', 'error')
+            return redirect(url_for('index'))
+        
+        # Get user data if logged in
+        user_data = None
+        if 'user_id' in session:
+            user_data = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+        
+        # Fetch related movies (same genre)
+        related_movies = list(mongo.db.movies.find({
+            'genre': movie['genre'],
+            '_id': {'$ne': movie['_id']}
+        }).limit(4))
+        
+        return render_template('movie_details.html', 
+                             movie=movie,
+                             user_data=user_data,
+                             logged_in='user_id' in session,
+                             username=session.get('username', ''),
+                             related_movies=related_movies)
+    except:
+        flash('Invalid movie ID.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/book-seats/<movie_id>')
+def book_seats(movie_id):
+    """Seat selection page"""
+    if 'user_id' not in session:
+        flash('Please login to book tickets.', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        # Fetch movie details
+        movie = mongo.db.movies.find_one({'_id': __import__('bson').ObjectId(movie_id)})
+        
+        if not movie:
+            flash('Movie not found.', 'error')
+            return redirect(url_for('index'))
+        
+        # Get theatre details
+        theatre_owner = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(movie['added_by'])})
+        theatre_info = theatre_owner.get('theatre_info', {}) if theatre_owner else {}
+        
+        # Get user data
+        user_data = mongo.db.users.find_one({'_id': __import__('bson').ObjectId(session['user_id'])})
+        
+        # Get show times from movie data
+        show_times = movie.get('show_times', ['09:00 AM', '12:30 PM', '03:45 PM', '06:30 PM', '09:15 PM'])
+        
+        return render_template('seat_selection.html',
+                             movie=movie,
+                             user_data=user_data,
+                             logged_in=True,
+                             username=session.get('username', ''),
+                             theatre_info=theatre_info,
+                             show_times=show_times)
+    except:
+        flash('Invalid movie ID.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/create-order', methods=['POST'])
+def create_order():
+    """Create Razorpay order"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Please login first'}), 401
+    
+    try:
+        data = request.get_json()
+        amount = int(data['amount']) * 100  # Convert to paise
+        movie_id = data['movie_id']
+        seats = data['seats']
+        show_time = data['show_time']
+        
+        # Create Razorpay order
+        order_data = {
+            'amount': amount,
+            'currency': 'INR',
+            'payment_capture': 1
+        }
+        
+        razorpay_order = razorpay_client.order.create(data=order_data)
+        
+        # Prepare booking data
+        booking_data = {
+            'user_id': session['user_id'],
+            'movie_id': movie_id,
+            'seats': seats,
+            'show_time': show_time,
+            'amount': amount // 100,
+            'order_id': razorpay_order['id']
+        }
+        
+        return jsonify({
+            'order_id': razorpay_order['id'],
+            'amount': amount,
+            'razorpay_key': RAZORPAY_KEY_ID,
+            'booking_data': booking_data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/verify-payment', methods=['POST'])
+def verify_payment():
+    """Verify Razorpay payment and create booking"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Please login first'}), 401
+    
+    try:
+        data = request.get_json()
+        
+        # Verify payment signature
+        params_dict = {
+            'razorpay_order_id': data['razorpay_order_id'],
+            'razorpay_payment_id': data['razorpay_payment_id'],
+            'razorpay_signature': data['razorpay_signature']
+        }
+        
+        # Verify signature
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Payment verified, create booking in database
+        booking_data = data['booking_data']
+        booking = {
+            'user_id': booking_data['user_id'],
+            'movie_id': booking_data['movie_id'],
+            'seats': booking_data['seats'],
+            'show_time': booking_data['show_time'],
+            'amount': booking_data['amount'],
+            'razorpay_order_id': data['razorpay_order_id'],
+            'razorpay_payment_id': data['razorpay_payment_id'],
+            'payment_status': 'completed',
+            'booking_date': datetime.utcnow(),
+            'status': 'confirmed'
+        }
+        
+        result = mongo.db.bookings.insert_one(booking)
+        
+        return jsonify({
+            'success': True,
+            'booking_id': str(result.inserted_id)
+        })
+        
+    except razorpay.errors.SignatureVerificationError:
+        return jsonify({'success': False, 'error': 'Payment signature verification failed'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/logout')
+def logout():
+    """Logout route"""
+    session.clear()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)

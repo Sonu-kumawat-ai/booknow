@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Seats - {{ movie.title }} - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seat_selection.css') }}">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="{{ url_for('main.index') }}" class="logo-link">Book<span>Now</span></a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-auth">
+                <span class="welcome-text">Welcome, {{ username }}!</span>
+                <div class="profile-dropdown">
+                    <button class="profile-icon" id="profileToggle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="8" r="3"></circle>
+                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="profileMenu">
+                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                            <span class="dropdown-icon">👤</span>
+                            My Profile
+                        </a>
+                        <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
+                            <span class="dropdown-icon">🎟️</span>
+                            My Bookings
+                        </a>
+                        <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                            <span class="dropdown-icon">⚙️</span>
+                            Settings
+                        </a>
+                        {% if user_data and (user_data.role == 'theatre_owner' or user_data.role == 'admin') %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                                <span class="dropdown-icon">📊</span>
+                                Theatre Dashboard
+                            </a>
+                            <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🎬</span>
+                                Add Movie
+                            </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🚪</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Seat Selection Section -->
+    <section class="seat-selection-section">
+        <div class="container">
+            <div class="booking-header">
+                <div class="movie-booking-info">
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" class="booking-poster">
+                    <div class="booking-details">
+                        <h1>{{ movie.title }}</h1>
+                        <p><strong>Theatre:</strong> {{ theatre.name if theatre else 'N/A' }}</p>
+                        <p><strong>Location:</strong> {{ theatre.city if theatre else '' }}{% if theatre and theatre.state %}, {{ theatre.state }}{% endif %}</p>
+                        <p><strong>Screen:</strong> {{ screen.name if screen else 'N/A' }}</p>
+                        <p><strong>Show Date:</strong> {{ showtime.show_date if showtime else 'N/A' }}</p>
+                        <p><strong>Show Time:</strong> {{ showtime.show_time if showtime else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticket and Time Selector Bar -->
+            <div class="selection-bar">
+                <div class="selection-item">
+                    <label>NO. OF TICKETS</label>
+                    <div class="ticket-selector">
+                        <button class="ticket-btn ticket-decrease">-</button>
+                        <span id="maxTickets" class="ticket-count">4</span>
+                        <button class="ticket-btn ticket-increase">+</button>
+                    </div>
+                </div>
+                <div class="selection-item">
+                    <label>SHOWTIME</label>
+                    <div class="showtime-display" id="selectedTime">
+                        Select Time
+                    </div>
+                </div>
+            </div>
+
+            <div class="seat-selection-container">
+
+                <!-- Screen -->
+                <div class="screen-container">
+                    <div class="screen">SCREEN</div>
+                </div>
+
+                <!-- Seats Grid -->
+                <div class="seats-wrapper">
+                    <!-- Normal Section (Near Screen) -->
+                    <div class="seat-class-section">
+                        <h3 class="seat-class-title">NORMAL CLASS - ₹{{ showtime.ticket_price if showtime.ticket_price else 200 }}</h3>
+                        <div id="normalSeatsContainer" class="seats-container">
+                            <!-- Normal Seats will be generated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- VIP Section (Far from Screen) -->
+                    <div class="seat-class-section">
+                        <h3 class="seat-class-title">VIP CLASS - ₹{{ showtime.vip_price if showtime.vip_price else 300 }}</h3>
+                        <div id="vipSeatsContainer" class="seats-container">
+                            <!-- VIP Seats will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Summary -->
+                <div class="booking-summary">
+                    <div class="summary-content">
+                        <div class="summary-item">
+                            <span>Selected Seats:</span>
+                            <span id="selectedSeatsDisplay">None</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Number of Tickets:</span>
+                            <span id="ticketCount">0</span>
+                        </div>
+                    </div>
+                    <button id="proceedBtn" class="btn btn-primary btn-large" disabled>
+                        Proceed to Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Container -->
+    <script id="booking-data" type="application/json">
+        {
+            "totalSeats": {{ screen.seating_capacity if screen and screen.seating_capacity else 60 }},
+            "normalTicketPrice": {{ showtime.ticket_price if showtime.ticket_price else 200 }},
+            "vipTicketPrice": {{ showtime.vip_price if showtime.vip_price else 300 }},
+            "movieId": "{{ movie._id }}",
+            "showtimeId": "{{ showtime._id }}",
+            "showDate": "{{ showtime.show_date if showtime else '' }}",
+            "showTime": "{{ showtime.show_time if showtime else '' }}",
+            "movieTitle": "{{ movie.title }}",
+            "username": "{{ username }}",
+            "email": "{{ user_data.email if user_data and user_data.email else '' }}",
+            "bookedSeats": {{ booked_seats | tojson if booked_seats else '[]' }}
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/seat_selection.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+// Hero Rotator
+let currentSlide = 0;
+const slides = document.querySelectorAll('.hero-slide');
+const dots = document.querySelectorAll('.dot');
+const prevBtn = document.querySelector('.hero-prev');
+const nextBtn = document.querySelector('.hero-next');
+
+function showSlide(index) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    if (index >= slides.length) {
+        currentSlide = 0;
+    } else if (index < 0) {
+        currentSlide = slides.length - 1;
+    } else {
+        currentSlide = index;
+    }
+    
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
+}
+
+function nextSlide() {
+    showSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+    showSlide(currentSlide - 1);
+}
+
+// Event listeners for hero controls
+if (nextBtn) {
+    nextBtn.addEventListener('click', nextSlide);
+}
+
+if (prevBtn) {
+    prevBtn.addEventListener('click', prevSlide);
+}
+
+dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => showSlide(index));
+});
+
+// Auto-rotate slides every 5 seconds
+let autoRotate = setInterval(nextSlide, 5000);
+
+// Pause auto-rotate on hover
+const heroSection = document.querySelector('.hero');
+if (heroSection) {
+    heroSection.addEventListener('mouseenter', () => {
+        clearInterval(autoRotate);
+    });
+
+    heroSection.addEventListener('mouseleave', () => {
+        autoRotate = setInterval(nextSlide, 5000);
+    });
+}
+
+// Smooth scrolling for navigation links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#') {
+            e.preventDefault();
+            const target = document.querySelector(href);
+            if (target) {
+                const navHeight = document.querySelector('.navbar').offsetHeight;
+                const targetPosition = target.offsetTop - navHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    });
+});
+
+// Active navigation link on scroll
+window.addEventListener('scroll', () => {
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    let current = '';
+    
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+            current = section.getAttribute('id');
+        }
+    });
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+
+// Flash message close button
+document.querySelectorAll('.close-flash').forEach(button => {
+    button.addEventListener('click', function() {
+        this.parentElement.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            this.parentElement.remove();
+        }, 300);
+    });
+});
+
+// Auto-hide flash messages after 5 seconds
+setTimeout(() => {
+    document.querySelectorAll('.flash-message').forEach(message => {
+        message.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            message.remove();
+        }, 300);
+    });
+}, 5000);
+
+// Mobile menu toggle
+const hamburger = document.querySelector('.hamburger');
+const navLinks = document.querySelector('.nav-links');
+
+if (hamburger) {
+    hamburger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    });
+}
+
+// Form validation for registration
+const registerForm = document.querySelector('form[action*="register"]');
+if (registerForm) {
+    registerForm.addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+        
+        if (password.length < 6) {
+            e.preventDefault();
+            alert('Password must be at least 6 characters long!');
+            return false;
+        }
+    });
+}
+
+// Profile dropdown toggle
+const profileToggle = document.getElementById('profileToggle');
+const profileMenu = document.getElementById('profileMenu');
+
+if (profileToggle && profileMenu) {
+    profileToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!profileToggle.contains(e.target) && !profileMenu.contains(e.target)) {
+            profileMenu.classList.remove('show');
+        }
+    });
+
+    // Close dropdown when pressing Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            profileMenu.classList.remove('show');
+        }
+    });
+}
+
+// Add animation to movie cards on scroll
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.animation = 'fadeInUp 0.6s ease-out';
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.movie-card, .feature-card').forEach(card => {
+    observer.observe(card);
+});
+
+// Add CSS animation for fade in up
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .nav-links.active {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        padding: 1rem;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .hamburger.active span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+    }
+`;
+document.head.appendChild(style);
+
+// Password visibility toggle (optional enhancement)
+function addPasswordToggle() {
+    const passwordInputs = document.querySelectorAll('input[type="password"]');
+    passwordInputs.forEach(input => {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+        
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.innerHTML = '👁️';
+        toggleBtn.style.cssText = `
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+        `;
+        
+        toggleBtn.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggleBtn.innerHTML = '🙈';
+            } else {
+                input.type = 'password';
+                toggleBtn.innerHTML = '👁️';
+            }
+        });
+        
+        wrapper.appendChild(toggleBtn);
+    });
+}
+
+// Initialize password toggle on auth pages
+if (document.querySelector('.auth-form')) {
+    addPasswordToggle();
+}
+
+console.log('BookNow - Movie Booking Website Loaded Successfully! 🎬');
