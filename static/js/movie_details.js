@@ -49,7 +49,7 @@ function showTimesModal(button) {
             const timeCard = document.createElement('div');
             timeCard.className = 'showtime-time-card';
             timeCard.innerHTML = `
-                <div class="showtime-time">⏰ ${showtime.show_time}</div>
+                <div class="showtime-time">⏰ ${formatTime(showtime.show_time)}</div>
                 <div class="showtime-details">
                     <span>💰 ₹${showtime.ticket_price}</span>
                     <span>🪑 ${showtime.available_seats} seats</span>
@@ -78,11 +78,24 @@ function selectShowtime(showtimeId) {
     window.location.href = `/book-seats/${showtimeId}`;
 }
 
-// Format date for display
+// Format date for display (DD-MM-YYYY)
 function formatDate(dateStr) {
     const date = new Date(dateStr);
-    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const options = { weekday: 'short' };
+    const weekday = date.toLocaleDateString('en-US', options);
+    return `${weekday}, ${day}-${month}-${year}`;
+}
+
+// Format time for display (12-hour with AM/PM)
+function formatTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${String(displayHour).padStart(2, '0')}:${minutes} ${ampm}`;
 }
 
 // Close modal when clicking outside

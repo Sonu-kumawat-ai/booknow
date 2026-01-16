@@ -66,11 +66,11 @@
                     </div>
                     <div class="detail-item">
                         <label>Show Date</label>
-                        <div class="value">{{ booking.show_date }}</div>
+                        <div class="value">{{ booking.show_date|format_date }}</div>
                     </div>
                     <div class="detail-item">
                         <label>Show Time</label>
-                        <div class="value">{{ booking.show_time }}</div>
+                        <div class="value">{{ booking.show_time|format_time }}</div>
                     </div>
                     <div class="detail-item">
                         <label>Number of Tickets</label>

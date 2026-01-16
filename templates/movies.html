@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookNow - Movie Booking Made Easy</title>
+    <title>All Movies - BookNow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
@@ -12,12 +12,14 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>Book<span>Now</span></h1>
+                <a href="{{ url_for('main.index') }}">
+                    <h1>Book<span>Now</span></h1>
+                </a>
             </div>
             <ul class="nav-links">
-                <li><a href="{{ url_for('main.index') }}" class="active">Home</a></li>
-                <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
-                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('main.all_movies') }}" class="active">Movies</a></li>
+                <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
             </ul>
             <div class="nav-auth">
                 {% if logged_in %}
@@ -91,92 +93,36 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Hero Section with Rotator -->
-    <section class="hero" id="home">
-        <div class="hero-rotator">
-            <div class="hero-slide active">
-                <img src="/static/image/images.jpg" alt="Cinema" class="hero-image">
-                <div class="hero-overlay"></div>
-                <div class="hero-content">
-                    <div class="container">
-                        <h1 class="hero-title">Experience Cinema Like Never Before</h1>
-                        <p class="hero-subtitle">Book your favorite movies in seconds with BookNow</p>
-                        <div class="hero-buttons">
-                            <a href="#movies" class="btn btn-primary btn-lg">Browse Movies</a>
-                            <a href="#why-us" class="btn btn-outline btn-lg">Learn More</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="hero-slide">
-                <img src="/static/image/images2.jpg" alt="Cinema Seats" class="hero-image">
-                <div class="hero-overlay"></div>
-                <div class="hero-content">
-                    <div class="container">
-                        <h1 class="hero-title">Your Seat, Your Choice</h1>
-                        <p class="hero-subtitle">Select from premium seats to budget-friendly options</p>
-                        <div class="hero-buttons">
-                            <a href="#movies" class="btn btn-primary btn-lg">Book Now</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="hero-slide">
-                <img src="/static/image/images3.jpg" alt="Movie Experience" class="hero-image">
-                <div class="hero-overlay"></div>
-                <div class="hero-content">
-                    <div class="container">
-                        <h1 class="hero-title">Fast & Secure Booking</h1>
-                        <p class="hero-subtitle">Complete your booking in just a few clicks</p>
-                        <div class="hero-buttons">
-                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <button class="hero-prev">&#10094;</button>
-        <button class="hero-next">&#10095;</button>
-        <div class="hero-dots">
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>🎬 All Movies</h1>
+            <p>Browse our complete collection of movies currently showing</p>
         </div>
     </section>
 
     <!-- Movies Section -->
-    <section class="movies-section" id="movies">
+    <section class="movies-section" id="movies" style="padding: 4rem 0;">
         <div class="container">
-            <div class="section-header">
-                <h2>Now Showing</h2>
-                <p>Discover the latest blockbusters and book your tickets today</p>
-            </div>
             {% if movies %}
             <div class="movies-grid">
                 {% for movie in movies %}
-                <div class="movie-card">
+                <div class="movie-card" style="cursor: pointer;" data-movie-url="{{ url_for('movie.movie_details', movie_id=movie._id) }}">
                     <div class="movie-poster">
                         <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
                         <div class="movie-overlay">
-                            <a href="{{ url_for('movie.movie_details', movie_id=movie._id) }}" class="btn btn-primary">View Details</a>
+                            <button class="btn-watch">Book Now</button>
                         </div>
                     </div>
                     <div class="movie-info">
                         <h3>{{ movie.title }}</h3>
                         <div class="movie-meta">
-                            {% if movie.rating %}
                             <span class="rating">⭐ {{ movie.rating }}</span>
-                            {% endif %}
                             <span class="genre">{{ movie.genre }}</span>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
-            </div>
-            <div style="text-align: center; margin-top: 3rem;">
-                <a href="{{ url_for('main.all_movies') }}" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem; text-decoration: none; display: inline-block;">
-                    🎬 View More Movies
-                </a>
             </div>
             {% else %}
             <div class="no-movies">
@@ -185,48 +131,6 @@
                 <p>Please check back later for upcoming movies</p>
             </div>
             {% endif %}
-        </div>
-    </section>
-
-    <!-- Why BookNow Section -->
-    <section class="why-section" id="why-us">
-        <div class="container">
-            <div class="section-header">
-                <h2>Why Choose BookNow?</h2>
-                <p>Experience the best movie booking platform with unmatched features</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎬</div>
-                    <h3>Wide Selection</h3>
-                    <p>Browse from thousands of movies across all genres and languages</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Quick Booking</h3>
-                    <p>Book your tickets in under 60 seconds with our streamlined process</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Secure Payment</h3>
-                    <p>Your transactions are protected with bank-level encryption</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💺</div>
-                    <h3>Best Seats</h3>
-                    <p>Choose from our interactive seating chart and get the best view</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎟️</div>
-                    <h3>Digital Tickets</h3>
-                    <p>Get instant e-tickets delivered to your email and mobile</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Great Deals</h3>
-                    <p>Enjoy exclusive discounts and cashback offers on bookings</p>
-                </div>
-            </div>
         </div>
     </section>
 

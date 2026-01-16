@@ -255,6 +255,9 @@ def movie_details(movie_id):
                 
                 if theatre_id in theatres_dict:
                     screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+                    # Get actual capacity from screen, fallback to showtime's available_seats
+                    screen_capacity = screen.get('seating_capacity', showtime.get('available_seats', 100)) if screen else showtime.get('available_seats', 100)
+                    
                     theatres_dict[theatre_id]['showtimes'].append({
                         '_id': str(showtime['_id']),
                         'show_date': showtime['show_date'],
@@ -262,6 +265,7 @@ def movie_details(movie_id):
                         'ticket_price': showtime['ticket_price'],
                         'vip_price': showtime['vip_price'],
                         'available_seats': showtime['available_seats'],
+                        'total_capacity': screen_capacity,
                         'screen_name': screen.get('name', 'Unknown') if screen else 'Unknown'
                     })
             except Exception:

@@ -186,8 +186,8 @@
                                             <strong>{{ show.movie_title }}</strong>
                                         </td>
                                         <td><span class="badge">{{ show.screen_name }}</span></td>
-                                        <td>{{ show.show_date }}</td>
-                                        <td><strong>{{ show.show_time }}</strong></td>
+                                        <td>{{ show.show_date|format_date }}</td>
+                                        <td><strong>{{ show.show_time|format_time }}</strong></td>
                                         <td>{{ show.movie_duration }} min</td>
                                         <td>
                                             Normal: <strong>₹{{ show.ticket_price }}</strong><br>

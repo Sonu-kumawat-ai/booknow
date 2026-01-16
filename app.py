@@ -7,6 +7,7 @@ from flask_pymongo import PyMongo
 from flask_mail import Mail
 import razorpay
 from modules.config import Config
+from modules.utils import format_date, format_time, format_datetime
 
 # Import route blueprints
 from modules.auth import init_auth
@@ -24,6 +25,11 @@ from modules.database_init import initialize_database
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
+
+# Register custom Jinja2 filters
+app.jinja_env.filters['format_date'] = format_date
+app.jinja_env.filters['format_time'] = format_time
+app.jinja_env.filters['format_datetime'] = format_datetime
 
 # Initialize MongoDB
 mongo = PyMongo(app)

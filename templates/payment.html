@@ -191,8 +191,8 @@
                 <p><strong>Theatre:</strong> {{ theatre.name if theatre else 'N/A' }}</p>
                 <p><strong>Location:</strong> {{ theatre.city if theatre else '' }}{% if theatre and theatre.state %}, {{ theatre.state }}{% endif %}</p>
                 <p><strong>Screen:</strong> {{ screen.name if screen else 'N/A' }}</p>
-                <p><strong>Show Date:</strong> {{ showtime.show_date if showtime else 'N/A' }}</p>
-                <p><strong>Show Time:</strong> {{ showtime.show_time if showtime else 'N/A' }}</p>
+                <p><strong>Show Date:</strong> {{ showtime.show_date|format_date if showtime else 'N/A' }}</p>
+                <p><strong>Show Time:</strong> {{ showtime.show_time|format_time if showtime else 'N/A' }}</p>
             </div>
         </div>
 

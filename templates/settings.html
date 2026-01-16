@@ -18,7 +18,7 @@
             </div>
             <nav class="nav-links">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                 <li><a href="{{ url_for('user.settings') }}" class="active">Settings</a></li>
             </ul>
             <div class="nav-auth">
@@ -48,6 +48,13 @@
                             <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
                                 <span class="dropdown-icon">🎬</span>
                                 Add Movie
+                            </a>
+                        {% endif %}
+                        {% if user_data and user_data.role == 'admin' %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🛡️</span>
+                                Admin Panel
                             </a>
                         {% endif %}
                         <div class="dropdown-divider"></div>
@@ -216,6 +223,7 @@
                 </div>
 
                 <!-- Theatre Owner Section -->
+                {% if user.role != 'admin' %}
                 <div class="profile-card">
                     <div class="card-header">
                         <h3>🎬 Theatre Owner Portal</h3>
@@ -265,6 +273,7 @@
                         {% endif %}
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Danger Zone -->
                 <div class="profile-card">

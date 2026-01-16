@@ -7,6 +7,7 @@ from flask_mail import Message
 from datetime import datetime
 from bson import ObjectId
 import razorpay
+from modules.utils import format_date, format_time
 
 booking_bp = Blueprint('booking', __name__)
 mail = None
@@ -103,8 +104,8 @@ def send_booking_confirmation_email(email, username, booking_details):
                         <p><strong>Theatre:</strong> {booking_details['theatre_name']}</p>
                         <p><strong>Location:</strong> {booking_details['location']}</p>
                         <p><strong>Screen:</strong> {booking_details['screen_name']}</p>
-                        <p><strong>Show Date:</strong> {booking_details['show_date']}</p>
-                        <p><strong>Show Time:</strong> {booking_details['show_time']}</p>
+                        <p><strong>Show Date:</strong> {format_date(booking_details['show_date'])}</p>
+                        <p><strong>Show Time:</strong> {format_time(booking_details['show_time'])}</p>
                     </div>
                     
                     <div class="seat-info">

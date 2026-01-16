@@ -110,16 +110,23 @@ def approve_theatre_owner(application_id):
     }
     theatre_id = admin_bp.mongo.db.theatres.insert_one(theatre).inserted_id
     
-    # Create screens for the theatre
+    # Create screens for the theatre with individual capacities
     total_screens = application.get('total_screens', 1)
-    seating_capacity_per_screen = application.get('seating_capacity', 100)
+    screen_capacities = application.get('screen_capacities', [])
+    
+    # If no individual capacities, use default
+    if not screen_capacities:
+        default_capacity = application.get('seating_capacity', 100)
+        screen_capacities = [default_capacity] * total_screens
     
     for screen_num in range(1, total_screens + 1):
+        # Use individual capacity for each screen
+        capacity = screen_capacities[screen_num - 1] if screen_num <= len(screen_capacities) else 100
         screen = {
             'theatre_id': str(theatre_id),
             'screen_number': screen_num,
             'name': f'Screen {screen_num}',
-            'seating_capacity': seating_capacity_per_screen,
+            'seating_capacity': capacity,
             'screen_type': '2D',
             'sound_system': 'Dolby Digital',
             'features': ['Air Conditioned', 'Wheelchair Accessible'],
