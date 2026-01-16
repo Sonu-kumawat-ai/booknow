@@ -94,9 +94,26 @@ function generateShowTimeInputs() {
         for (let i = 1; i <= parseInt(totalShows); i++) {
             const inputWrapper = document.createElement('div');
             inputWrapper.className = 'show-time-input-wrapper';
+            
+            // Get available screens
+            const screenSelect = document.getElementById('screen_id');
+            let screenOptions = '';
+            if (screenSelect) {
+                const options = screenSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    if (option.value) {
+                        screenOptions += `<option value="${option.value}">${option.textContent}</option>`;
+                    }
+                });
+            }
+            
             inputWrapper.innerHTML = `
                 <label for="show_${i}">Show ${i}:</label>
                 <div class="show-datetime-inputs">
+                    <select name="screen_id[]" class="show-screen-select" required>
+                        <option value="">Select Screen</option>
+                        ${screenOptions}
+                    </select>
                     <input type="date" name="show_date[]" class="show-date-input" placeholder="Date" required>
                     <input type="time" name="show_time[]" placeholder="Time" required>
                     <input type="number" name="ticket_price[]" placeholder="Normal Price (₹)" min="1" step="1" required style="width: 140px;">

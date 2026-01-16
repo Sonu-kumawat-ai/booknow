@@ -3,7 +3,7 @@ Movie routes module
 Handles movie addition, details, and listing
 """
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 
 movie_bp = Blueprint('movie', __name__)
@@ -57,24 +57,24 @@ def add_movie():
         genre = request.form.get('genre')
         certificate = request.form.get('certificate', '')
         trailer_url = request.form.get('trailer_url', '')
-        screen_id = request.form.get('screen_id')
         
         show_dates = request.form.getlist('show_date[]')
         show_times = request.form.getlist('show_time[]')
+        screen_ids = request.form.getlist('screen_id[]')
         ticket_prices = request.form.getlist('ticket_price[]')
         vip_prices = request.form.getlist('vip_price[]')
         
         # Validation
-        if not all([title, description, poster_url, director, cast, duration, release_date, language, genre, screen_id]):
+        if not all([title, description, poster_url, director, cast, duration, release_date, language, genre]):
             flash('All required fields must be filled!', 'error')
             return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
         
-        if not show_dates or not show_times or not ticket_prices or not vip_prices:
-            flash('Please provide valid show details including dates, times, and prices!', 'error')
+        if not show_dates or not show_times or not screen_ids or not ticket_prices or not vip_prices:
+            flash('Please provide valid show details including screens, dates, times, and prices!', 'error')
             return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
         
-        if len(show_dates) != len(show_times) or len(show_dates) != len(ticket_prices) or len(show_dates) != len(vip_prices):
-            flash('Please provide prices for all showtimes!', 'error')
+        if len(show_dates) != len(show_times) or len(show_dates) != len(screen_ids) or len(show_dates) != len(ticket_prices) or len(show_dates) != len(vip_prices):
+            flash('Please provide screen and prices for all showtimes!', 'error')
             return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
         
         # Validate show dates are not before release date
@@ -120,16 +120,61 @@ def add_movie():
             movie_id = movie_bp.mongo.db.movies.insert_one(movie_data).inserted_id
         
         # Create showtimes for this movie
-        screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(screen_id)})
-        screen_theatre_id = screen.get('theatre_id')
+        movie_duration = int(duration)
         
+        # Validate each showtime for conflicts
         for i in range(len(show_dates)):
+            show_date = show_dates[i]
+            show_time = show_times[i]
+            screen_id = screen_ids[i]
+            
+            # Get screen details
+            screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(screen_id)})
+            if not screen:
+                flash(f'Invalid screen selected for show {i+1}', 'error')
+                return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+            
+            screen_theatre_id = screen.get('theatre_id')
+            
+            # Calculate end time for this show (add buffer of 30 minutes for cleaning)
+            show_datetime = datetime.strptime(f"{show_date} {show_time}", '%Y-%m-%d %H:%M')
+            show_end_datetime = show_datetime + timedelta(minutes=movie_duration + 30)
+            
+            # Check for conflicting shows in the same screen on the same date
+            existing_showtimes = list(movie_bp.mongo.db.showtimes.find({
+                'screen_id': screen_id,
+                'show_date': show_date,
+                'status': 'active'
+            }))
+            
+            has_conflict = False
+            for existing in existing_showtimes:
+                # Get the movie duration for existing show
+                existing_movie = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(existing['movie_id'])})
+                if not existing_movie:
+                    continue
+                    
+                existing_duration = existing_movie.get('duration', 120)
+                existing_datetime = datetime.strptime(f"{existing['show_date']} {existing['show_time']}", '%Y-%m-%d %H:%M')
+                existing_end_datetime = existing_datetime + timedelta(minutes=existing_duration + 30)
+                
+                # Check if times overlap
+                if (show_datetime < existing_end_datetime and show_end_datetime > existing_datetime):
+                    has_conflict = True
+                    existing_movie_title = existing_movie.get('title', 'Unknown')
+                    flash(f'Show conflict! Screen is occupied from {existing["show_time"]} to {existing_end_datetime.strftime("%H:%M")} by "{existing_movie_title}" on {show_date}. Please choose a different time.', 'error')
+                    break
+            
+            if has_conflict:
+                return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+            
+            # No conflict, create the showtime
             showtime = {
                 'movie_id': str(movie_id),
                 'theatre_id': screen_theatre_id,
                 'screen_id': screen_id,
-                'show_date': show_dates[i],
-                'show_time': show_times[i],
+                'show_date': show_date,
+                'show_time': show_time,
                 'ticket_price': int(ticket_prices[i]),
                 'vip_price': int(vip_prices[i]),
                 'available_seats': screen.get('seating_capacity', 100),
@@ -174,10 +219,22 @@ def movie_details(movie_id):
             flash('Movie not found.', 'error')
             return redirect(url_for('main.index'))
         
-        # Get showtimes for this movie
+        # Get current date and time
+        current_datetime = datetime.now()
+        current_date = current_datetime.strftime('%Y-%m-%d')
+        current_time = current_datetime.strftime('%H:%M')
+        
+        # Get showtimes for this movie (only future showtimes)
         showtimes = list(movie_bp.mongo.db.showtimes.find({
             'movie_id': str(movie['_id']),
-            'status': 'active'
+            'status': 'active',
+            '$or': [
+                {'show_date': {'$gt': current_date}},
+                {
+                    'show_date': current_date,
+                    'show_time': {'$gte': current_time}
+                }
+            ]
         }))
         
         # Group showtimes by theatre

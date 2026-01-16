@@ -207,18 +207,19 @@
                             </div>
                             {% endif %}
 
-                            <div class="form-group">
-                                <label for="screen_id">Select Screen *</label>
-                                <select id="screen_id" name="screen_id" required {% if all_theatres %}disabled{% endif %}>
+                            <div class="form-group" id="screenListContainer" style="display: none;">
+                                <label>Available Screens</label>
+                                <select id="screen_id" {% if all_theatres %}disabled{% endif %}>
                                     {% if all_theatres %}
                                     <option value="">Select a theatre first</option>
                                     {% else %}
-                                    <option value="">Choose a screen</option>
+                                    <option value="">Screen options will appear per show</option>
                                     {% for screen in screens %}
                                     <option value="{{ screen._id }}">{{ screen.name }} (Capacity: {{ screen.seating_capacity }})</option>
                                     {% endfor %}
                                     {% endif %}
                                 </select>
+                                <small>Each show can be assigned to a different screen</small>
                             </div>
 
                             <div class="form-group">

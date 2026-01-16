@@ -11,7 +11,11 @@ import random
 import string
 import requests
 import json
+import os
 from oauthlib.oauth2 import WebApplicationClient
+
+# Allow OAuth over HTTP for local development
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 auth_bp = Blueprint('auth', __name__)
 mail = None
@@ -252,7 +256,7 @@ def google_login():
     # Construct the request for Google login
     request_uri = google_client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri=url_for('auth.google_callback', _external=True),
+        redirect_uri=url_for('auth.google_callback', _external=True, _scheme='http'),
         scope=["openid", "email", "profile"],
     )
     return redirect(request_uri)
@@ -282,7 +286,7 @@ def google_callback():
     token_url, headers, body = google_client.prepare_token_request(
         token_endpoint,
         authorization_response=request.url,
-        redirect_url=url_for('auth.google_callback', _external=True),
+        redirect_url=url_for('auth.google_callback', _external=True, _scheme='http'),
         code=code
     )
     
@@ -340,7 +344,6 @@ def google_callback():
                     'email': email,
                     'password': generate_password_hash(google_id),  # Use Google ID as password
                     'google_id': google_id,
-                    'profile_picture': picture,
                     'role': 'user',
                     'created_at': datetime.utcnow(),
                     'last_login': datetime.utcnow()

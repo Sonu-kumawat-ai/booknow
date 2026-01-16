@@ -147,41 +147,63 @@ def theatre_dashboard():
     # Get all screens for this theatre
     screens = list(theatre_bp.mongo.db.screens.find({'theatre_id': str(theatre['_id'])}))
     
-    # Fetch all showtimes for this theatre
-    showtimes = list(theatre_bp.mongo.db.showtimes.find({'theatre_id': str(theatre['_id'])}))
+    # Fetch all showtimes for this theatre with movie and screen details
+    from datetime import datetime, timedelta
+    current_datetime = datetime.now()
+    current_date = current_datetime.strftime('%Y-%m-%d')
+    current_time = current_datetime.strftime('%H:%M')
     
-    # Get unique movies from showtimes
-    movie_ids = list(set([st['movie_id'] for st in showtimes]))
-    movies = []
-    for movie_id in movie_ids:
-        movie = theatre_bp.mongo.db.movies.find_one({'_id': ObjectId(movie_id)})
-        if movie:
-            movie['_id'] = str(movie['_id'])
-            # Count showtimes for this movie
-            movie['showtimes_count'] = len([st for st in showtimes if st['movie_id'] == movie_id])
-            # Get ticket price from first showtime
-            movie_showtime = next((st for st in showtimes if st['movie_id'] == movie_id), None)
-            if movie_showtime:
-                movie['ticket_price'] = movie_showtime.get('ticket_price', 0)
-            movies.append(movie)
+    all_showtimes = list(theatre_bp.mongo.db.showtimes.find({
+        'theatre_id': str(theatre['_id']),
+        'status': 'active',
+        '$or': [
+            {'show_date': {'$gt': current_date}},
+            {
+                'show_date': current_date,
+                'show_time': {'$gte': current_time}
+            }
+        ]
+    }))
+    
+    # Enrich showtimes with movie and screen data
+    shows = []
+    for showtime in all_showtimes:
+        movie = theatre_bp.mongo.db.movies.find_one({'_id': ObjectId(showtime['movie_id'])})
+        screen = theatre_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+        
+        if movie and screen:
+            show = {
+                'showtime_id': str(showtime['_id']),
+                'movie_title': movie.get('title', 'Unknown'),
+                'movie_poster': movie.get('poster_url', ''),
+                'movie_duration': movie.get('duration', 0),
+                'screen_name': screen.get('name', 'Unknown'),
+                'show_date': showtime.get('show_date', ''),
+                'show_time': showtime.get('show_time', ''),
+                'ticket_price': showtime.get('ticket_price', 0),
+                'vip_price': showtime.get('vip_price', 0),
+                'available_seats': showtime.get('available_seats', 0)
+            }
+            shows.append(show)
     
     # Calculate statistics
-    total_movies = len(movies)
+    total_shows = len(shows)
     total_screens = len(screens)
-    total_showtimes = len(showtimes)
+    total_movies = len(set([s['movie_title'] for s in shows])) if shows else 0
     
     # Get recent bookings for this theatre
+    showtime_ids = [str(st['_id']) for st in all_showtimes]
     booking_count = theatre_bp.mongo.db.bookings.count_documents({
-        'showtime_id': {'$in': [str(st['_id']) for st in showtimes]}
-    })
+        'showtime_id': {'$in': showtime_ids}
+    }) if showtime_ids else 0
     
     return render_template('theatre_dashboard.html', 
                          user=user, 
                          user_data=user,
                          theatre=theatre,
                          screens=screens,
-                         my_movies=movies,
-                         total_movies=total_movies,
+                         my_shows=shows,
+                         total_shows=total_shows,
                          total_screens=total_screens,
-                         total_showtimes=total_showtimes,
+                         total_movies=total_movies,
                          total_bookings=booking_count)
