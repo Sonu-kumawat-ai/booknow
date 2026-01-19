@@ -4,7 +4,7 @@ Handles seat selection and booking process
 """
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_mail import Message
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 import razorpay
 from modules.utils import format_date, format_time
@@ -492,13 +492,46 @@ def booking_confirmation(booking_id):
         booking['amount'] = booking.get('total_amount', 0)
         booking['payment_status'] = payment.get('payment_status', 'completed') if payment else 'completed'
         
+        # Get user data for Google signup check
+        user_data = None
+        if 'user_id' in session:
+            user_data = booking_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+
+        # Build Google Calendar prefill URL
+        try:
+            from urllib.parse import quote_plus
+            # Parse show start and end times
+            try:
+                start_dt = datetime.strptime(f"{booking['show_date']} {booking['show_time']}", '%Y-%m-%d %H:%M')
+            except Exception:
+                # Fallback: treat show_time as HH:MM or just use current time
+                start_dt = datetime.utcnow()
+            duration_min = int(movie.get('duration', 120)) if movie and movie.get('duration') else 120
+            end_dt = start_dt + timedelta(minutes=duration_min)
+
+            def fmt(dt):
+                return dt.strftime('%Y%m%dT%H%M%S')
+
+            dates = f"{fmt(start_dt)}/{fmt(end_dt)}"
+            title = f"{movie.get('title', 'Movie')} - {theatre.get('name', '')}"
+            details = f"Booking ID: {booking.get('_id')}\nSeats: {', '.join(booking.get('seats', []))}\nBooked via BookNow"
+            location = f"{theatre.get('name', '')}, {theatre.get('city', '')}" if theatre else ''
+            calendar_url = (
+                'https://calendar.google.com/calendar/render?action=TEMPLATE&'
+                f'text={quote_plus(title)}&dates={dates}&details={quote_plus(details)}&location={quote_plus(location)}&trp=false'
+            )
+        except Exception:
+            calendar_url = None
+
         return render_template('booking_confirmation.html',
                              booking=booking,
                              movie=movie,
                              showtime=showtime,
                              theatre=theatre,
                              screen=screen,
-                             username=session.get('username', ''))
+                             username=session.get('username', ''),
+                             user_data=user_data,
+                             calendar_url=calendar_url)
     except Exception:
         flash('Invalid booking ID.', 'error')
         return redirect(url_for('main.index'))

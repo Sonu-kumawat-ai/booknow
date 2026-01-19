@@ -19,7 +19,6 @@
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
                 <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
                 <li><a href="#why-us">Why Us</a></li>
-                <li><a href="#contact">Contact</a></li>
             </ul>
             <div class="nav-auth">
                 <span class="welcome-text">Welcome, {{ username }}!</span>
@@ -35,10 +34,6 @@
                         <a href="{{ url_for('user.profile') }}" class="dropdown-item">
                             <span class="dropdown-icon">👤</span>
                             My Profile
-                        </a>
-                        <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
-                            <span class="dropdown-icon">🎟️</span>
-                            My Bookings
                         </a>
                         <a href="{{ url_for('user.settings') }}" class="dropdown-item">
                             <span class="dropdown-icon">⚙️</span>

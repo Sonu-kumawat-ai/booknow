@@ -17,6 +17,8 @@ from modules.theatre import init_theatre
 from modules.admin import init_admin
 from modules.movie import init_movie
 from modules.booking import init_booking
+from modules.reviews import init_reviews
+from modules.calendar import init_calendar
 
 # Import database initialization
 from modules.database_init import initialize_database
@@ -55,6 +57,8 @@ theatre_blueprint = init_theatre(mongo)
 admin_blueprint = init_admin(mongo)
 movie_blueprint = init_movie(mongo)
 booking_blueprint = init_booking(mongo, razorpay_client, Config.RAZORPAY_KEY_ID, mail)
+reviews_blueprint = init_reviews(mongo)
+calendar_blueprint = init_calendar(mongo, google_config)
 
 # Register blueprints
 app.register_blueprint(auth_blueprint)
@@ -64,6 +68,8 @@ app.register_blueprint(theatre_blueprint)
 app.register_blueprint(admin_blueprint)
 app.register_blueprint(movie_blueprint)
 app.register_blueprint(booking_blueprint)
+app.register_blueprint(reviews_blueprint)
+app.register_blueprint(calendar_blueprint)
 
 if __name__ == '__main__':
     app.run(debug=True)

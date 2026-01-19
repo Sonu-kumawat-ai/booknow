@@ -33,21 +33,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (deleteAccountBtn) {
         deleteAccountBtn.addEventListener('click', function() {
             const confirmed = confirm(
-                'Are you sure you want to delete your account?\\n\\n' +
-                'This action cannot be undone. All your data including:\\n' +
-                '- Profile information\\n' +
-                '- Booking history\\n' +
-                '- Payment records\\n\\n' +
-                'will be permanently deleted.\\n\\n' +
+                'Are you sure you want to delete your account?\n\n' +
+                'This action cannot be undone. All your data including:\n' +
+                '- Profile information\n' +
+                '- Booking history\n' +
+                '- Payment records\n\n' +
+                'will be permanently deleted.\n\n' +
                 'Type "DELETE" to confirm:'
             );
-            
+
             if (confirmed) {
                 const finalConfirm = prompt('Type DELETE to confirm account deletion:');
-                
+
                 if (finalConfirm === 'DELETE') {
-                    fetch('/delete-account', {
+                    const deleteUrl = deleteAccountBtn.dataset.deleteUrl || '/delete-account';
+                    fetch(deleteUrl, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json'
                         }
@@ -56,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(data => {
                         if (data.success) {
                             alert('Your account has been deleted successfully.');
-                            window.location.href = data.redirect;
+                            window.location.href = data.redirect || '/';
                         } else {
                             alert(data.message || 'Failed to delete account');
                         }
@@ -68,6 +70,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Account deletion cancelled. You must type DELETE to confirm.');
                 }
             }
+        });
+    }
+    
+    // Disconnect Google Calendar (uses data-disconnect-url on anchor)
+    const disc = document.getElementById('disconnectCalendar');
+    if (disc) {
+        disc.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!confirm('Disconnect Google Calendar?')) return;
+            const disconnectUrl = disc.dataset.disconnectUrl || '/calendar/disconnect';
+            fetch(disconnectUrl, { method: 'POST', credentials: 'same-origin' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Disconnected successfully');
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Failed to disconnect');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Network error');
+                });
         });
     }
 });

@@ -164,8 +164,10 @@
                     <div class="movie-info">
                         <h3>{{ movie.title }}</h3>
                         <div class="movie-meta">
-                            {% if movie.rating %}
-                            <span class="rating">⭐ {{ movie.rating }}</span>
+                            {% if movie.avg_rating is not none %}
+                                <span class="rating">⭐ {{ movie.avg_rating }}</span>
+                            {% elif movie.rating %}
+                                <span class="rating">⭐ {{ movie.rating }}</span>
                             {% endif %}
                             <span class="genre">{{ movie.genre }}</span>
                         </div>

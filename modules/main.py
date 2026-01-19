@@ -46,6 +46,13 @@ def index():
         
         if future_showtimes_count > 0:
             movie['_id'] = str(movie['_id'])
+            # compute average rating from reviews collection
+            agg = list(main_bp.mongo.db.reviews.aggregate([
+                {'$match': {'movie_id': str(movie['_id'])}},
+                {'$group': {'_id': '$movie_id', 'avg': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+            ]))
+            movie['avg_rating'] = round(agg[0]['avg'], 1) if agg else None
+            movie['reviews_count'] = agg[0]['count'] if agg else 0
             movies.append(movie)
     
     # Limit to 3 latest movies for home page
@@ -92,6 +99,12 @@ def all_movies():
         
         if future_showtimes_count > 0:
             movie['_id'] = str(movie['_id'])
+            agg = list(main_bp.mongo.db.reviews.aggregate([
+                {'$match': {'movie_id': str(movie['_id'])}},
+                {'$group': {'_id': '$movie_id', 'avg': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+            ]))
+            movie['avg_rating'] = round(agg[0]['avg'], 1) if agg else None
+            movie['reviews_count'] = agg[0]['count'] if agg else 0
             movies.append(movie)
     
     # Get user data if logged in

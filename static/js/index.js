@@ -128,3 +128,27 @@ document.querySelectorAll('.movie-card, .feature-card').forEach(card => {
 });
 
 console.log('Index page loaded! 🎬');
+
+// Make movie cards clickable (navigate to details)
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.movie-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const url = card.dataset.movieUrl;
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    });
+
+    // Ensure overlay button doesn't stop navigation but still responds to clicks
+    document.querySelectorAll('.movie-card .btn-watch').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Prevent double handling if parent also handles click
+            e.stopPropagation();
+            const card = btn.closest('.movie-card');
+            if (card && card.dataset.movieUrl) {
+                window.location.href = card.dataset.movieUrl;
+            }
+        });
+    });
+});

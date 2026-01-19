@@ -161,6 +161,51 @@
     padding: 1rem;
 }
 
+/* Google Calendar Prominent Card Styles */
+.google-card {
+    border: 1px solid rgba(43,45,66,0.06);
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,252,0.98));
+    box-shadow: 0 8px 30px rgba(43,45,66,0.06);
+}
+
+.google-card .card-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.google-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.google-connected .success-badge {
+    background-color: rgba(16,185,129,0.08);
+    color: #10b981;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.google-not-connected h4,
+.google-require-signin h4 {
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+}
+
+.google-card .btn-social.btn-google {
+    background: #ea4335;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1rem;
+}
+
+.google-card .btn-social.btn-google:hover {
+    opacity: 0.95;
+}
+
 .success-badge,
 .pending-badge,
 .rejected-badge {
@@ -210,6 +255,38 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+}
+
+/* Danger button styles */
+.btn-danger {
+    background: transparent;
+    color: var(--primary-red);
+    border: 2px solid var(--primary-red);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: rgba(244,67,54,0.06);
+}
+
+/* Improve Danger Zone box styling */
+.danger-zone {
+    border: 1px solid rgba(244,67,54,0.08);
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(244,67,54,0.02);
+}
+
+.danger-zone .danger-actions .btn-outline {
+    border-color: rgba(255, 165, 0, 0.9);
+    color: rgba(255, 165, 0, 0.95);
+}
+
+.danger-zone .danger-actions .btn-outline:hover {
+    background: rgba(255,165,0,0.05);
 }
 
 @media (max-width: 768px) {

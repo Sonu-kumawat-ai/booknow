@@ -16,7 +16,6 @@
             </div>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('user.profile') }}">My Bookings</a></li>
             </ul>
             <div class="nav-auth">
                 <span class="welcome-text">Welcome, {{ username }}!</span>
@@ -93,6 +92,19 @@
                 <div class="action-buttons">
                     <a href="{{ url_for('user.profile') }}" class="btn btn-secondary">View All Bookings</a>
                     <a href="{{ url_for('main.index') }}" class="btn btn-primary">Book More Tickets</a>
+                    {% if booking.get('calendar_event_id') %}
+                        <button class="btn btn-outline" disabled>Added to Google Calendar</button>
+                    {% elif user_data %}
+                        {% if user_data.get('google_tokens') %}
+                            <button id="addToCalendarBtn" class="btn btn-outline">Add to Google Calendar</button>
+                        {% elif user_data.get('google_id') %}
+                            <a href="{{ url_for('calendar.calendar_connect') }}" class="btn btn-social btn-google">Connect Google Calendar</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.google_login') }}" class="btn btn-social btn-google">Sign up / Sign in with Google</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-social btn-google">Login to connect</a>
+                    {% endif %}
                 </div>
 
                 <div class="note">
@@ -103,5 +115,59 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('addToCalendarBtn');
+
+            function createFlash(category, message) {
+                // Try to find existing flash container (used by templates)
+                let container = document.querySelector('.flash-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'flash-container';
+                    // insert after nav if possible
+                    const nav = document.querySelector('nav.navbar');
+                    if (nav && nav.parentNode) nav.parentNode.insertBefore(container, nav.nextSibling);
+                    else document.body.insertBefore(container, document.body.firstChild);
+                }
+
+                const flash = document.createElement('div');
+                flash.className = `flash-message flash-${category}`;
+                flash.innerHTML = `${message} <button class="flash-close">×</button>`;
+                container.appendChild(flash);
+
+                const closeBtn = flash.querySelector('.flash-close');
+                closeBtn.addEventListener('click', () => flash.remove());
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => { try { flash.remove(); } catch (e) {} }, 5000);
+            }
+
+            if (!btn) return;
+            btn.addEventListener('click', async () => {
+                btn.disabled = true;
+                const originalText = btn.textContent;
+                btn.textContent = 'Adding...';
+                try {
+                    const resp = await fetch(`/calendar/add_event/{{ booking._id }}`, {method: 'POST'});
+                    const data = await resp.json();
+                    if (resp.ok && data.success) {
+                        // Show flash-style success message and disable button permanently
+                        createFlash('success', 'Added to Google Calendar ✓');
+                        btn.textContent = 'Added';
+                        btn.disabled = true;
+                    } else {
+                        createFlash('error', data.error || 'Failed to add event');
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                } catch (e) {
+                    createFlash('error', 'Network error while adding to calendar');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

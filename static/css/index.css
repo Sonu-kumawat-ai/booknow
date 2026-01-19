@@ -200,6 +200,38 @@
     padding: 1.5rem;
 }
 
+/* Book Now button inside overlay */
+.btn-watch {
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(43,45,66,0.25);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-watch:hover {
+    transform: translateY(-3px);
+}
+
+/* Improve responsiveness and spacing for movie cards */
+.movie-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.movie-poster {
+    flex: 0 0 auto;
+}
+
+.movie-info {
+    flex: 1 1 auto;
+}
+
 .movie-info h3 {
     font-size: 1.3rem;
     color: var(--text-dark);

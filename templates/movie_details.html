@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/movie_details.css') }}">
 </head>
-<body>
+<body data-user-id="{{ session.get('user_id') or '' }}">
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="container">
@@ -18,7 +18,6 @@
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
                 <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
                 <li><a href="#why-us">Why Us</a></li>
-                <li><a href="#contact">Contact</a></li>
             </ul>
             <div class="nav-auth">
                 {% if logged_in %}
@@ -35,10 +34,6 @@
                             <a href="{{ url_for('user.profile') }}" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 My Profile
-                            </a>
-                            <a href="{{ url_for('user.profile') }}#bookings" class="dropdown-item">
-                                <span class="dropdown-icon">🎟️</span>
-                                My Bookings
                             </a>
                             <a href="{{ url_for('user.settings') }}" class="dropdown-item">
                                 <span class="dropdown-icon">⚙️</span>
@@ -129,6 +124,7 @@
                         {% if movie.release_date %}
                         <span>📅 {{ movie.release_date }}</span>
                         {% endif %}
+                        <span id="avgRating">{% if movie.get('avg_rating') is not none %}⭐ {{ movie.get('avg_rating') }}{% elif movie.get('rating') %}⭐ {{ movie.get('rating') }}{% endif %}</span>
                         {% if movie.ticket_price %}
                         <span>💰 ₹{{ movie.ticket_price }}</span>
                         {% endif %}
@@ -168,6 +164,8 @@
                         {% endif %}
                     </div>
 
+                    <!-- Reviews Section (moved below theatres) -->
+
                     {% if theatres and theatres|length > 0 %}
                     <div class="showtimes-section">
                         <h3>Available in These Theatres</h3>
@@ -201,7 +199,39 @@
             </div>
         </div>
     </section>
+    <!-- Reviews Section (inserted after theatres/showtimes) -->
+    <section class="movie-reviews-section">
+        <div class="container">
+            <div id="reviewsSection" class="reviews-section">
+                <h3>Reviews</h3>
 
+                {% if logged_in %}
+                <div id="reviewFormContainer">
+                    <form id="reviewForm" data-movie-id="{{ movie._id }}">
+                        <div class="form-row">
+                            <label for="reviewRating">Your Rating (0-10)</label>
+                            <input type="number" id="reviewRating" name="rating" min="0" max="10" step="1" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="reviewText">Write a review</label>
+                            <textarea id="reviewText" name="text" rows="3" placeholder="Share your thoughts..."></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="submitReview">Submit Review</button>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <p><a href="{{ url_for('auth.login') }}">Log in</a> to leave a review.</p>
+                {% endif %}
+
+                <div id="reviewsList" data-movie-id="{{ movie._id }}"></div>
+                <div class="reviews-loadmore" style="text-align:center; margin-top:1rem;">
+                    <button id="loadMoreReviews" class="btn btn-outline">Load more reviews</button>
+                </div>
+            </div>
+        </div>
+    </section>
     <!-- Related Movies Section -->
     {% if related_movies %}
     <section class="related-movies-section">
@@ -291,5 +321,9 @@
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
     <script src="{{ url_for('static', filename='js/movie_details.js') }}"></script>
+    <script>
+        window.CURRENT_USER_ID = document.body.getAttribute('data-user-id') || null;
+    </script>
+    <script src="{{ url_for('static', filename='js/reviews.js') }}"></script>
 </body>
 </html>

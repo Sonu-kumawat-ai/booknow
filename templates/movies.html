@@ -117,7 +117,7 @@
                     <div class="movie-info">
                         <h3>{{ movie.title }}</h3>
                         <div class="movie-meta">
-                            <span class="rating">⭐ {{ movie.rating }}</span>
+                            <span class="rating">⭐ {{ movie.avg_rating if movie.avg_rating is not none else movie.rating }}</span>
                             <span class="genre">{{ movie.genre }}</span>
                         </div>
                     </div>

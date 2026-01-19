@@ -194,26 +194,46 @@ def delete_account():
         return jsonify({'success': False, 'message': 'Not authenticated'}), 401
     
     user_id = session['user_id']
-    
-    # Delete user's bookings
-    user_bp.mongo.db.bookings.delete_many({'user_id': user_id})
-    
-    # Delete user's booking seats
-    bookings = list(user_bp.mongo.db.bookings.find({'user_id': user_id}))
-    for booking in bookings:
-        user_bp.mongo.db.booking_seats.delete_many({'booking_id': str(booking['_id'])})
-    
-    # Delete user's payments
-    user_bp.mongo.db.payments.delete_many({'user_id': user_id})
-    
-    # Delete user's theatre owner applications
-    user_bp.mongo.db.theatre_owner_applications.delete_many({'user_id': user_id})
-    
-    # Delete user
-    user_bp.mongo.db.users.delete_one({'_id': ObjectId(user_id)})
-    
-    # Clear session
-    session.clear()
-    
-    flash('Your account has been deleted successfully.', 'success')
-    return jsonify({'success': True, 'redirect': url_for('main.index')}), 200
+    try:
+        # Fetch bookings first so we can remove related booking_seats
+        bookings = list(user_bp.mongo.db.bookings.find({'user_id': user_id}))
+
+        # Delete booking seats for each booking
+        for booking in bookings:
+            try:
+                user_bp.mongo.db.booking_seats.delete_many({'booking_id': str(booking['_id'])})
+            except Exception:
+                pass
+
+        # Delete bookings
+        user_bp.mongo.db.bookings.delete_many({'user_id': user_id})
+
+        # Delete payments
+        try:
+            user_bp.mongo.db.payments.delete_many({'user_id': user_id})
+        except Exception:
+            pass
+
+        # Delete reviews authored by user (user_id stored as string in reviews)
+        try:
+            user_bp.mongo.db.reviews.delete_many({'user_id': user_id})
+        except Exception:
+            pass
+
+        # Delete theatre owner applications
+        try:
+            user_bp.mongo.db.theatre_owner_applications.delete_many({'user_id': user_id})
+        except Exception:
+            pass
+
+        # Optionally: remove any saved tokens or OAuth entries (stored on user doc)
+        # Finally delete user document
+        user_bp.mongo.db.users.delete_one({'_id': ObjectId(user_id)})
+
+        # Clear session
+        session.clear()
+        flash('Your account and related data have been deleted successfully.', 'success')
+        return jsonify({'success': True, 'redirect': url_for('main.index')}), 200
+    except Exception as e:
+        print(f"Error deleting account for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to delete account'}), 500
