@@ -39,7 +39,23 @@ if (genreSelect) {
     genreSelect.addEventListener('change', function(e) {
         const previewGenre = document.getElementById('preview-genre');
         if (previewGenre) {
-            previewGenre.textContent = e.target.value || 'Genre';
+            // support multiple selection: join selected options
+            const selected = Array.from(e.target.selectedOptions).map(o => o.value).filter(Boolean);
+            previewGenre.textContent = selected.length ? selected.join(', ') : 'Genre';
+        }
+    });
+}
+
+// Improve UX: allow single-click toggle of options (no Ctrl needed)
+if (genreSelect) {
+    genreSelect.addEventListener('mousedown', function(e) {
+        const opt = e.target;
+        if (opt && opt.tagName === 'OPTION') {
+            e.preventDefault();
+            opt.selected = !opt.selected;
+            // dispatch change so preview updates
+            const ev = new Event('change', { bubbles: true });
+            genreSelect.dispatchEvent(ev);
         }
     });
 }

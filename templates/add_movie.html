@@ -18,7 +18,7 @@
             </div>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                 <li><a href="#" class="active">Add Movie</a></li>
             </ul>
             <div class="nav-auth">
@@ -157,21 +157,21 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="genre">Genre *</label>
-                                    <select id="genre" name="genre" required>
-                                        <option value="">Select a genre</option>
-                                        <option value="Action">Action</option>
-                                        <option value="Comedy">Comedy</option>
-                                        <option value="Drama">Drama</option>
-                                        <option value="Horror">Horror</option>
-                                        <option value="Romance">Romance</option>
-                                        <option value="Sci-Fi">Sci-Fi</option>
-                                        <option value="Thriller">Thriller</option>
-                                        <option value="Adventure">Adventure</option>
-                                        <option value="Animation">Animation</option>
-                                        <option value="Fantasy">Fantasy</option>
-                                        <option value="Documentary">Documentary</option>
-                                    </select>
+                                    <label for="genre">Genre(s) *</label>
+                                        <select id="genre" name="genre" multiple size="5" required>
+                                            <option value="Action">Action</option>
+                                            <option value="Comedy">Comedy</option>
+                                            <option value="Drama">Drama</option>
+                                            <option value="Horror">Horror</option>
+                                            <option value="Romance">Romance</option>
+                                            <option value="Sci-Fi">Sci-Fi</option>
+                                            <option value="Thriller">Thriller</option>
+                                            <option value="Adventure">Adventure</option>
+                                            <option value="Animation">Animation</option>
+                                            <option value="Fantasy">Fantasy</option>
+                                            <option value="Documentary">Documentary</option>
+                                        </select>
+                                        <small>You can select multiple genres (Ctrl/Cmd + click)</small>
                                 </div>
 
                                 <div class="form-group">
@@ -300,7 +300,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                        <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                         <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
                         <li><a href="{{ url_for('theatre.theatre_dashboard') }}">Dashboard</a></li>
                     </ul>

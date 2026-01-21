@@ -98,6 +98,10 @@
         <div class="container">
             <h1>🎬 All Movies</h1>
             <p>Browse our complete collection of movies currently showing</p>
+            <form method="get" action="{{ url_for('main.all_movies') }}" class="movies-search header-search">
+                <input type="text" name="q" placeholder="Search movies, actors, genres..." value="{{ search_query if search_query is defined else request.args.get('q','') }}">
+                <button type="submit" class="btn btn-primary search-btn">Search</button>
+            </form>
         </div>
     </section>
 
@@ -125,11 +129,22 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="no-movies">
-                <div class="no-movies-icon">🎬</div>
-                <h3>No Current Shows Available</h3>
-                <p>Please check back later for upcoming movies</p>
-            </div>
+                {% if search_query %}
+                    <div class="no-movies">
+                        <div class="no-movies-icon">🔍</div>
+                        <h3>No movies found for "{{ search_query }}"</h3>
+                        <p>Try different keywords or check spelling.</p>
+                        {% if suggestions %}
+                            <p>Did you mean: <strong>{{ suggestions | join(', ') }}</strong> ?</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="no-movies">
+                        <div class="no-movies-icon">🎬</div>
+                        <h3>No Current Shows Available</h3>
+                        <p>Please check back later for upcoming movies</p>
+                    </div>
+                {% endif %}
             {% endif %}
         </div>
     </section>
@@ -152,7 +167,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="#home">Home</a></li>
-                        <li><a href="#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                         <li><a href="#why-us">Why Us</a></li>
                         <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
                     </ul>

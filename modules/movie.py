@@ -54,7 +54,10 @@ def add_movie():
         duration = request.form.get('duration')
         release_date = request.form.get('release_date')
         language = request.form.get('language')
-        genre = request.form.get('genre')
+        # allow multiple genres
+        genre_list = request.form.getlist('genre')
+        # normalize to comma-separated string for storage
+        genre = ', '.join([g for g in genre_list if g]) if genre_list else ''
         certificate = request.form.get('certificate', '')
         trailer_url = request.form.get('trailer_url', '')
         
@@ -292,13 +295,24 @@ def movie_details(movie_id):
         # Convert movie _id to string
         movie['_id'] = str(movie['_id'])
         
+        # Determine if reviews should be enabled (movie released)
+        can_review = True
+        try:
+            release_str = movie.get('release_date', '')
+            if release_str:
+                release_date_obj = datetime.strptime(release_str, '%Y-%m-%d').date()
+                can_review = release_date_obj <= current_datetime.date()
+        except Exception:
+            can_review = True
+
         return render_template('movie_details.html', 
                              movie=movie,
                              theatres=theatres,
                              user_data=user_data,
                              logged_in='user_id' in session,
                              username=session.get('username', ''),
-                             related_movies=related_movies)
+                             related_movies=related_movies,
+                             can_review=can_review)
     except Exception:
         flash('Invalid movie ID.', 'error')
         return redirect(url_for('main.index'))

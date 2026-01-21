@@ -183,7 +183,7 @@
                                     <div class="empty-icon">🎬</div>
                                     <h4>No Bookings Yet</h4>
                                     <p>Start booking your favorite movies now!</p>
-                                    <a href="{{ url_for('main.index') }}#movies" class="btn btn-primary">Browse Movies</a>
+                                    <a href="{{ url_for('main.all_movies') }}" class="btn btn-primary">Browse Movies</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -211,7 +211,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                        <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                         <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
                         <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
                     </ul>

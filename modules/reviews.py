@@ -23,6 +23,27 @@ def add_review():
     if not movie_id or rating is None:
         return jsonify({'success': False, 'error': 'movie_id and rating required'}), 400
 
+    # Prevent reviews before movie release
+    try:
+        # movie_id stored as string id; try to resolve
+        mv = None
+        try:
+            mv = reviews_bp.mongo.db.movies.find_one({'_id': ObjectId(movie_id)})
+        except Exception:
+            mv = reviews_bp.mongo.db.movies.find_one({'_id': movie_id})
+
+        if mv:
+            release = mv.get('release_date', '')
+            if release:
+                try:
+                    rd = datetime.strptime(release, '%Y-%m-%d').date()
+                    if rd > datetime.utcnow().date():
+                        return jsonify({'success': False, 'error': 'Reviews are disabled until the movie release date'}), 400
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     try:
         rating = int(rating)
     except Exception:

@@ -99,6 +99,27 @@
     color: var(--text-dark);
 }
 
+/* Multi-select specific styling for genre field */
+.form-group select[multiple] {
+    padding: 0.6rem 0.75rem;
+    min-height: 120px;
+    max-height: 220px;
+    overflow: auto;
+    height: auto;
+}
+
+/* Improve pointer and visibility for options */
+.form-group select[multiple] option {
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+}
+
+/* Note: styling of option:checked is limited across browsers */
+.form-group select[multiple] option:checked {
+    background: var(--primary-red);
+    color: var(--text-light);
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {

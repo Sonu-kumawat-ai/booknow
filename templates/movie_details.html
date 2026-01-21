@@ -16,7 +16,7 @@
             </div>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                 <li><a href="#why-us">Why Us</a></li>
             </ul>
             <div class="nav-auth">
@@ -207,6 +207,7 @@
 
                 {% if logged_in %}
                 <div id="reviewFormContainer">
+                    {% if can_review %}
                     <form id="reviewForm" data-movie-id="{{ movie._id }}">
                         <div class="form-row">
                             <label for="reviewRating">Your Rating (0-10)</label>
@@ -220,6 +221,11 @@
                             <button type="submit" class="btn btn-primary" id="submitReview">Submit Review</button>
                         </div>
                     </form>
+                    {% else %}
+                        <div class="review-disabled">
+                            <p>Reviews will be enabled on release date: <strong>{{ movie.release_date if movie.release_date else 'TBD' }}</strong></p>
+                        </div>
+                    {% endif %}
                 </div>
                 {% else %}
                 <p><a href="{{ url_for('auth.login') }}">Log in</a> to leave a review.</p>
@@ -277,7 +283,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                        <li><a href="{{ url_for('main.index') }}#movies">Movies</a></li>
+                        <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
                         <li><a href="{{ url_for('main.index') }}#why-us">Why Us</a></li>
                         <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
                     </ul>
