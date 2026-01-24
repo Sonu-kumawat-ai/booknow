@@ -17,7 +17,7 @@
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.index') }}" class="active">Home</a></li>
                 <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
-                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="{{ url_for('main.about') }}">About</a></li>
             </ul>
             <div class="nav-auth">
                 {% if logged_in %}
@@ -103,7 +103,7 @@
                         <p class="hero-subtitle">Book your favorite movies in seconds with BookNow</p>
                         <div class="hero-buttons">
                             <a href="#movies" class="btn btn-primary btn-lg">Browse Movies</a>
-                            <a href="#why-us" class="btn btn-outline btn-lg">Learn More</a>
+                                <a href="{{ url_for('main.about') }}#why-us" class="btn btn-outline btn-lg">Learn More</a>
                         </div>
                     </div>
                 </div>
@@ -190,47 +190,7 @@
         </div>
     </section>
 
-    <!-- Why BookNow Section -->
-    <section class="why-section" id="why-us">
-        <div class="container">
-            <div class="section-header">
-                <h2>Why Choose BookNow?</h2>
-                <p>Experience the best movie booking platform with unmatched features</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎬</div>
-                    <h3>Wide Selection</h3>
-                    <p>Browse from thousands of movies across all genres and languages</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Quick Booking</h3>
-                    <p>Book your tickets in under 60 seconds with our streamlined process</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Secure Payment</h3>
-                    <p>Your transactions are protected with bank-level encryption</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💺</div>
-                    <h3>Best Seats</h3>
-                    <p>Choose from our interactive seating chart and get the best view</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎟️</div>
-                    <h3>Digital Tickets</h3>
-                    <p>Get instant e-tickets delivered to your email and mobile</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Great Deals</h3>
-                    <p>Enjoy exclusive discounts and cashback offers on bookings</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    
 
     <!-- Footer -->
     <footer class="footer">
@@ -249,27 +209,26 @@
                 <div class="footer-section">
                     <h4>Quick Links</h4>
                     <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
-                        <li><a href="#why-us">Why Us</a></li>
-                        <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
+                           <li><a href="{{ url_for('main.about') }}#why-us">Why Us</a></li>
+                            <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Support</h4>
                     <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="{{ url_for('main.about') }}#help">Help Center</a></li>
+                        <li><a href="{{ url_for('main.about') }}#terms">Terms of Service</a></li>
+                        <li><a href="{{ url_for('main.about') }}#privacy">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('main.about') }}#contact">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Contact Info</h4>
                     <ul>
                         <li>📧 support@booknow.com</li>
-                        <li>📞 +1 (555) 123-4567</li>
-                        <li>📍 123 Movie Street, Cinema City</li>
+                        <li>📞 +91 9178463892</li>
                     </ul>
                 </div>
             </div>

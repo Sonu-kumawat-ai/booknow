@@ -1,0 +1,292 @@
+/* About page styles — consistent with base and index colors */
+:root{
+    /* Primary Colors */
+    --primary-red: #E63946;
+    --primary-yellow: #FFD166;
+    --dark-red: #D62828;
+    --light-yellow: #FFF4D9;
+}
+
+.about-hero{
+	/* Gradient with a warm red tint to match request */
+	background: linear-gradient(180deg, rgba(43,108,176,0.04) 0%, rgba(229,62,62,0.04) 40%, rgba(246,173,85,0.02) 100%);
+	padding:5rem 0;
+	color:var(--dark);
+	position:relative;overflow:hidden;
+}
+.about-hero .lead{
+	color:var(--muted);
+	max-width:700px;
+	margin-top:0.5rem;
+}
+
+/* decorative soft shapes in hero */
+.about-hero::before{
+	content:'';
+	position:absolute;right:-120px;top:-80px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(43,108,176,0.12), transparent 40%);
+	filter:blur(18px);opacity:0.9;pointer-events:none;
+}
+.about-hero::after{
+	content:'';position:absolute;left:-140px;bottom:-90px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle at 70% 70%, rgba(229,62,62,0.08), transparent 40%);filter:blur(22px);opacity:0.9;pointer-events:none;
+}
+
+.section-header h2{
+	color:var(--dark);
+	margin-bottom:0.5rem;
+}
+.section-header p{
+	color:var(--muted);
+	margin-bottom:1.5rem;
+}
+
+.section-header{
+	position:relative;
+	padding-bottom:0.4rem;
+}
+.section-header h2{
+	font-size:1.6rem;
+}
+.section-header::after{
+	content:'';
+	position:absolute;
+	left:50%;
+	transform:translateX(-50%);
+	bottom:0;
+	height:3px;
+	width:64px;
+	background:linear-gradient(90deg,var(--primary-red),var(--primary-yellow));
+	border-radius:3px;
+	/* hide underline globally per request */
+	display:none;
+}
+
+/* Center header and description for Why, Help, Terms, Privacy and FAQ sections */
+.why-section .section-header,
+.help-section .section-header,
+.terms-section .section-header,
+.privacy-section .section-header,
+.faq-section .section-header,
+.contact-section .section-header{
+	text-align:center;
+}
+.why-section .section-header p,
+.help-section .section-header p,
+.terms-section .section-header p,
+.privacy-section .section-header p,
+.faq-section .section-header p,
+.contact-section .section-header p{
+	margin-left:auto;
+	margin-right:auto;
+}
+
+.section-divider{
+	width:100%;
+	height:10px;
+	margin:18px 0 6px 0;
+	/* visual divider removed */
+	display:none;
+}
+
+/* Divider after each main section (appears below the section) */
+.why-section::after,
+.help-section::after,
+.terms-section::after,
+.privacy-section::after,
+.faq-section::after,
+.contact-section::after{
+	content:'';
+	display:block;
+	height:12px;
+	margin:28px 0 0 0;
+	background:linear-gradient(90deg, rgba(43,108,176,0.06), rgba(229,62,62,0.05), rgba(246,173,85,0.03));
+}
+
+/* General section spacing to make dividers visible and consistent */
+.why-section,
+.help-section,
+.terms-section,
+.privacy-section,
+.contact-section{
+	padding:2rem 0;
+}
+
+/* Slightly stronger header styles for consistency with homepage */
+.section-header h2{font-weight:700;letter-spacing:0.2px}
+.section-header p{max-width:800px}
+
+.features-grid{
+	display:grid;
+	grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+	gap:1.25rem;
+	margin-top:1rem;
+}
+.feature-card{
+	background:#fff;
+	border-radius:12px;
+	padding:1.25rem;
+	box-shadow:0 10px 26px rgba(16,24,40,0.06);
+	text-align:left;
+}
+.feature-icon{
+	font-size:32px;
+	margin-bottom:0.5rem;
+}
+.feature-card h3{color:var(--primary);margin-bottom:0.4rem}
+.feature-card p{color:var(--muted);font-size:0.95rem}
+/* nicer icon background */
+.feature-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:linear-gradient(180deg,#eaf4ff,#fef7ed);color:var(--primary);font-size:26px;box-shadow:0 6px 16px rgba(43,108,176,0.06)}
+
+.help-section .help-columns{
+	display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem;
+}
+.help-card{background:#fff;padding:1rem;border-radius:8px;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.help-card h3{color:var(--primary);margin-bottom:0.5rem}
+
+.terms-section .terms-content, .privacy-section .privacy-content{
+	background:transparent;padding:0;margin:0;color:var(--muted);
+}
+.terms-content .card-item, .privacy-content .card-item{background:#fff;padding:1rem;border-radius:8px;box-shadow:0 6px 18px rgba(16,24,40,0.04);line-height:1.6}
+.terms-content .card-item p, .privacy-content .card-item p{margin:0.6rem 0}
+
+.card-grid{
+	display:grid;
+	/* Force 3 columns on desktop to create a 3x2 layout (6 cards) */
+	grid-template-columns:repeat(3,minmax(220px,1fr));
+	gap:1.25rem;
+	margin-top:1rem;
+}
+
+@media (max-width:980px){
+	.card-grid{grid-template-columns:repeat(2,minmax(180px,1fr));}
+}
+@media (max-width:520px){
+	.card-grid{grid-template-columns:1fr}
+}
+
+/* Ensure Why and Help sections use a 3x2 layout on wide screens */
+@media (min-width:981px){
+	.why-section .card-grid,
+	.help-section .card-grid{
+		grid-template-columns:repeat(3,minmax(220px,1fr));
+		gap:1.5rem;
+	}
+}
+
+/* Add extra gap between cards in Terms and Privacy sections */
+.terms-section .card-grid,
+.privacy-section .card-grid{
+	gap:2rem;
+}
+.card-item{background:#fff;padding:1rem;border-radius:8px;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.card-item h3{color:var(--primary);margin-bottom:0.5rem}
+
+.about-why .features-grid .feature-card{transition:transform .22s cubic-bezier(.2,.9,.3,1),box-shadow .22s ease}
+.about-why .feature-card:hover{transform:translateY(-8px) scale(1.01);box-shadow:0 22px 48px rgba(16,24,40,0.12)}
+
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem}
+.contact-card{background:#fff;padding:1rem;border-radius:8px;box-shadow:0 6px 18px rgba(16,24,40,0.04);text-align:center}
+.contact-card h3{color:var(--primary);margin-bottom:0.4rem}
+.contact-card{border:1px solid rgba(43,108,176,0.04)}
+
+/* Make all card types share the "Why" visual style */
+.card-item, .feature-card, .help-card, .contact-card{
+	border-radius:12px;
+	padding:1.25rem;
+	box-shadow:0 10px 26px rgba(16,24,40,0.06);
+	background:#fff;
+	overflow:hidden;
+}
+.card-item{position:relative}
+.card-item::before{content:'';position:absolute;left:0;top:0;height:100%;width:6px;background:linear-gradient(180deg,var(--primary),var(--accent));border-top-left-radius:12px;border-bottom-left-radius:12px}
+
+/* Colored top accent bars for cards by section */
+.why-section .card-item::after,
+.why-section .feature-card::after{
+	content:'';position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,var(--primary),#2da0e6);border-top-left-radius:12px;border-top-right-radius:12px;
+}
+.help-section .card-item::after,
+.help-section .help-card::after{
+	content:'';position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,#e74c3c,#c0392b);border-top-left-radius:12px;border-top-right-radius:12px;
+}
+.terms-section .card-item::after{
+	content:'';position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,#e74c3c,#c0392b);border-top-left-radius:12px;border-top-right-radius:12px;
+}
+.privacy-section .card-item::after{
+	content:'';position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,#e74c3c,#c0392b);border-top-left-radius:12px;border-top-right-radius:12px;
+}
+.contact-section .card-item::after{
+	content:'';position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,#2ecc71,#27ae60);border-top-left-radius:12px;border-top-right-radius:12px;
+}
+
+/* Match h3 color to section accent */
+.why-section .card-item h3, .why-section .feature-card h3{color:var(--primary)}
+.help-section .card-item h3, .help-section .help-card h3{color:#c0392b}
+.terms-section .card-item h3{color:#c0392b}
+.privacy-section .card-item h3{color:#c0392b}
+.contact-section .contact-card h3{color:#27ae60}
+
+.container{max-width:1100px;margin:0 auto;padding:0 1rem}
+
+.footer{background:#0b1220;color:#cbd5e1;padding:2rem 0;margin-top:2.5rem}
+.footer a{color:inherit}
+
+@media (max-width:720px){
+	.about-hero{padding:3rem 0}
+	.feature-card{padding:1rem}
+}
+
+/* Additional polish */
+.about-hero{
+	display:flex;align-items:center;justify-content:center;text-align:center;min-height:220px;
+}
+.about-hero h1{font-size:2.4rem;margin:0;color:var(--dark);line-height:1.05}
+.about-hero .lead{font-size:1.05rem;margin:0.75rem auto 0;opacity:0.95}
+
+.about-hero .hero-cta{margin-top:1.25rem}
+.about-hero .btn{padding:0.7rem 1.1rem;border-radius:8px;display:inline-block;margin:0 0.5rem}
+.about-hero .btn-primary{background:linear-gradient(90deg,var(--primary), #1e90ff);color:#fff;border:0}
+.about-hero .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(46,117,186,0.18)}
+.about-hero .btn-outline{background:transparent;border:1px solid rgba(43,108,176,0.12);color:var(--primary)}
+.about-hero .btn-outline:hover{background:rgba(43,108,176,0.04)}
+
+/* Feature icon badges */
+.feature-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:linear-gradient(180deg,rgba(43,108,176,0.08),rgba(43,108,176,0.03));color:var(--primary);font-size:26px}
+
+/* Card accents and subtle hover */
+.card-item{position:relative;overflow:hidden}
+.card-item::before{content:'';position:absolute;left:0;top:0;height:100%;width:6px;background:linear-gradient(180deg,var(--primary),var(--accent));border-top-left-radius:8px;border-bottom-left-radius:8px}
+.feature-card::before{display:none}
+
+.card-item, .feature-card, .help-card, .contact-card{transition:transform .22s cubic-bezier(.2,.9,.3,1),box-shadow .22s ease}
+.card-item:hover, .feature-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(16,24,40,0.08)}
+
+/* Help card subtle icon */
+.help-card h3:before{content:'•';display:inline-block;margin-right:10px;color:var(--accent);font-weight:900}
+
+/* Contact cards center and CTA */
+.contact-card p{font-weight:600;color:var(--dark)}
+
+/* Small screens: stack hero text and reduce paddings */
+@media (max-width:520px){
+	.about-hero h1{font-size:1.6rem}
+	.card-grid{grid-template-columns:1fr}
+	.card-item::before{width:5px}
+}
+
+/* FAQ styles */
+.faq-list{margin-top:1rem;display:grid;gap:0.75rem}
+.faq-item{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.faq-question{width:100%;text-align:left;padding:1rem 1.1rem;background:transparent;border:0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700;color:var(--dark);cursor:pointer}
+.faq-question:focus{outline:none}
+.faq-toggle{display:inline-block;background:linear-gradient(90deg,#e74c3c,#c0392b);color:#fff;width:32px;height:32px;border-radius:8px;line-height:32px;text-align:center;font-weight:700}
+.faq-answer{padding:0 1.1rem;max-height:0;overflow:hidden;transition:max-height .28s ease;padding-bottom:0}
+.faq-question.open + .faq-answer{padding-top:0.8rem;padding-bottom:1rem}
+.faq-answer p, .faq-answer{color:var(--muted);line-height:1.6}
+.faq-question.open .faq-toggle{transform:rotate(45deg)}
+
+@media (max-width:520px){
+	.faq-question{padding:0.9rem}
+	.faq-answer{padding:0 0.9rem}
+}
+
+

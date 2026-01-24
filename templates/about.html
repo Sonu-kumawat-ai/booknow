@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>About - BookNow</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+</head>
+<body>
+	<!-- Navigation Bar -->
+	<nav class="navbar">
+		<div class="container">
+			<div class="nav-brand">
+				<a href="{{ url_for('main.index') }}">
+					<h1>Book<span>Now</span></h1>
+				</a>
+			</div>
+			<ul class="nav-links">
+				<li><a href="{{ url_for('main.index') }}">Home</a></li>
+				<li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
+				<li><a href="{{ url_for('main.about') }}" class="active">About</a></li>
+			</ul>
+			<div class="nav-auth">
+				{% if logged_in %}
+					<span class="welcome-text">Welcome, {{ username }}!</span>
+					<a href="{{ url_for('user.profile') }}" class="btn btn-outline">Profile</a>
+				{% else %}
+					<a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+					<a href="{{ url_for('auth.register') }}" class="btn btn-primary">Sign Up</a>
+				{% endif %}
+			</div>
+		</div>
+	</nav>
+
+	<!-- Hero -->
+	<section class="about-hero">
+		<div class="container">
+			<h1>About BookNow</h1>
+			<p class="lead">We make movie booking simple, fast and delightful — from seat selection to secure payment.</p>
+            
+		</div>
+	</section>
+
+	<!-- Why Us -->
+	<section id="why-us" class="why-section about-why">
+		<div class="container">
+			<div class="section-header">
+				<h2>Why Choose BookNow?</h2>
+				<p>Experience the best movie booking platform with unmatched features and customer-first policies.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="card-grid features-grid">
+				<div class="feature-card">
+					<div class="feature-icon">🎬</div>
+					<h3>Wide Selection</h3>
+					<p>Thousands of movies across all genres, languages and formats (2D, 3D, IMAX, 4DX).</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">⚡</div>
+					<h3>Quick Booking</h3>
+					<p>Book tickets in under a minute with an intuitive seat selection and streamlined checkout.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🔒</div>
+					<h3>Secure Payment</h3>
+					<p>Multiple trusted payment options protected by bank-grade encryption and secure tokens.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">💺</div>
+					<h3>Best Seats</h3>
+					<p>Interactive seating chart helps you choose the perfect seat for the best view and comfort.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">🎟️</div>
+					<h3>Digital Tickets</h3>
+					<p>Instant e-tickets delivered to your email and phone — skip queues and enjoy the show.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">💰</div>
+					<h3>Great Deals</h3>
+					<p>Exclusive discounts, combos and cashback offers for frequent moviegoers.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Help Center -->
+	<section id="help" class="help-section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Help Center</h2>
+				<p>Find answers to common questions, payment help, refunds, and booking issues.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="card-grid help-columns">
+				<div class="card-item help-card">
+					<h3>Booking & Seats</h3>
+					<p>Learn how to select seats, understand seating layouts, and reserve premium seating or add-ons.</p>
+				</div>
+				<div class="card-item help-card">
+					<h3>Payments & Refunds</h3>
+					<p>We accept major cards, UPI and wallets. Refunds are processed within 5-7 business days after approval.</p>
+				</div>
+				<div class="card-item help-card">
+					<h3>Account & Profile</h3>
+					<p>Manage your profile, view past bookings, set preferences, and save payment methods securely.</p>
+				</div>
+				<div class="card-item help-card">
+					<h3>Ticket Delivery</h3>
+					<p>Receive tickets via email and SMS instantly. Learn how to access and present e-tickets at the theatre.</p>
+				</div>
+				<div class="card-item help-card">
+					<h3>Offers & Coupons</h3>
+					<p>How to apply promo codes, combine offers and view active deals for your bookings.</p>
+				</div>
+				<div class="card-item help-card">
+					<h3>Accessibility & Special Needs</h3>
+					<p>Information on wheelchair access, companion seats, and assistance at partner theatres.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Terms -->
+	<section id="terms" class="terms-section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Terms of Service</h2>
+				<p>By using BookNow you agree to our terms which are designed to keep the platform fair and secure.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="card-grid terms-content">
+				<div class="card-item">
+					<h3>Acceptance</h3>
+					<p>Use of our services indicates your agreement to these terms. Please read them carefully.</p>
+				</div>
+				<div class="card-item">
+					<h3>Use of Services</h3>
+					<p>You agree to use the platform lawfully and to provide accurate information when creating an account or booking tickets.</p>
+				</div>
+				<div class="card-item">
+					<h3>Ticketing</h3>
+					<p>Tickets are subject to theatre availability and pricing. BookNow acts as an agent to facilitate bookings.</p>
+				</div>
+				<div class="card-item">
+					<h3>Refunds & Cancellations</h3>
+					<p>Refunds are handled per theatre policy and our refund guidelines; processing times vary.</p>
+				</div>
+				<div class="card-item">
+					<h3>Pricing & Fees</h3>
+					<p>Ticket prices include theatre fees and any applicable taxes. Service fees may be applied at checkout.</p>
+				</div>
+				<div class="card-item">
+					<h3>Limitation of Liability</h3>
+					<p>BookNow is not liable for theatre operations, show changes or other third-party service disruptions except as required by law.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Privacy -->
+	<section id="privacy" class="privacy-section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Privacy Policy</h2>
+				<p>Your privacy matters. This section explains what information we collect and how we use it.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="card-grid privacy-content">
+				<div class="card-item">
+					<h3>Data Collected</h3>
+					<p>We collect account details, booking history, device info and payment metadata to provide services.</p>
+				</div>
+				<div class="card-item">
+					<h3>Use of Data</h3>
+					<p>Data is used to process bookings, send confirmations, personalize recommendations and improve service quality.</p>
+				</div>
+				<div class="card-item">
+					<h3>Sharing</h3>
+					<p>We do not sell personal data. We share information with payment processors and theatres only as needed to fulfill bookings.</p>
+				</div>
+				<div class="card-item">
+					<h3>Security</h3>
+					<p>We use industry-standard safeguards to protect data. Contact support for any privacy-related requests.</p>
+				</div>
+				<div class="card-item">
+					<h3>Cookies & Tracking</h3>
+					<p>We use cookies and similar technologies to improve site performance and personalize your experience. You can manage preferences in your browser.</p>
+				</div>
+				<div class="card-item">
+					<h3>Data Retention</h3>
+					<p>We retain personal data only as long as necessary to provide services, comply with legal obligations, and improve user experience.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- FAQ -->
+	<section id="faq" class="faq-section">
+		<div class="container">
+			<div class="section-header">
+				<h2>FAQ's</h2>
+				<p>Common questions about bookings, payments, refunds and accounts.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="faq-list">
+				<div class="faq-item">
+					<button class="faq-question">How can I change or cancel my booking?<span class="faq-toggle">+</span></button>
+					<div class="faq-answer">Seat changes and cancellations depend on the theatre's policy. For most shows, cancellations are allowed within a limited window and may incur fees. Contact support with your booking ID for assistance.</div>
+				</div>
+				<div class="faq-item">
+					<button class="faq-question">What payment methods do you accept?<span class="faq-toggle">+</span></button>
+					<div class="faq-answer">We accept major debit/credit cards, UPI, and popular wallets. All transactions are secured using industry-standard encryption.</div>
+				</div>
+				<div class="faq-item">
+					<button class="faq-question">When will I receive my refund?<span class="faq-toggle">+</span></button>
+					<div class="faq-answer">Refunds are processed after approval and typically take 5-7 business days to reflect in your original payment method, depending on the bank or payment provider.</div>
+				</div>
+				<div class="faq-item">
+					<button class="faq-question">How do I update my account information?<span class="faq-toggle">+</span></button>
+					<div class="faq-answer">Go to your profile page after logging in to update personal details, saved payment methods, and preferences.</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact -->
+	<section id="contact" class="contact-section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Contact Us</h2>
+				<p>We're here to help — reach out via email or phone and we'll respond quickly.</p>
+			</div>
+			<div class="section-divider"></div>
+			<div class="contact-grid">
+				<div class="contact-card">
+					<h3>Email</h3>
+					<p>support@booknow.com</p>
+				</div>
+				<div class="contact-card">
+					<h3>Phone</h3>
+					<p>+91 9178463892</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<footer class="footer">
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-section">
+					<h3>Book<span>Now</span></h3>
+					<p>Your ultimate destination for hassle-free movie ticket booking.</p>
+				</div>
+				<div class="footer-section">
+					<h4>Quick Links</h4>
+					<ul>
+						<li><a href="{{ url_for('main.index') }}">Home</a></li>
+						<li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
+						<li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
+						<li><a href="{{ url_for('main.about') }}">About</a></li>
+					</ul>
+				</div>
+				<div class="footer-section">
+					<h4>Support</h4>
+					<ul>
+						<li><a href="#help">Help Center</a></li>
+						<li><a href="#terms">Terms of Service</a></li>
+						<li><a href="#privacy">Privacy Policy</a></li>
+						<li><a href="#contact">Contact Us</a></li>
+					</ul>
+				</div>
+				<div class="footer-section">
+					<h4>Contact Info</h4>
+					<ul>
+						<li>📧 support@booknow.com</li>
+						<li>📞 +91 9178463892</li>
+					</ul>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; 2026 BookNow. All rights reserved.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+	<script>
+		// Simple accordion toggle for FAQ
+		document.addEventListener('DOMContentLoaded', function(){
+			document.querySelectorAll('.faq-question').forEach(function(btn){
+				btn.addEventListener('click', function(){
+					var answer = btn.nextElementSibling;
+					var open = btn.classList.toggle('open');
+					if(open){
+						answer.style.maxHeight = answer.scrollHeight + 'px';
+					} else {
+						answer.style.maxHeight = null;
+					}
+				});
+			});
+		});
+	</script>
+</body>
+</html>
+

@@ -198,3 +198,16 @@ def all_movies():
         user_data = main_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
     
     return render_template('movies.html', logged_in=user_logged_in, username=username, movies=movies, user_data=user_data, search_query=search_query, suggestions=suggestions, no_results=no_results)
+
+
+@main_bp.route('/about')
+def about():
+    """About page route"""
+    user_logged_in = 'user_id' in session
+    username = session.get('username', '')
+
+    user_data = None
+    if user_logged_in:
+        user_data = main_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+
+    return render_template('about.html', logged_in=user_logged_in, username=username, user_data=user_data)
