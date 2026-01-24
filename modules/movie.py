@@ -182,7 +182,8 @@ def add_movie():
                 'vip_price': int(vip_prices[i]),
                 'available_seats': screen.get('seating_capacity', 100),
                 'status': 'active',
-                'created_date': datetime.utcnow()
+                'created_date': datetime.utcnow(),
+                'created_by': session.get('user_id')
             }
             movie_bp.mongo.db.showtimes.insert_one(showtime)
         

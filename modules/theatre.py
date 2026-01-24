@@ -134,14 +134,45 @@ def theatre_dashboard():
     
     # Check if user is theatre owner
     user = theatre_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
-    if not user or user.get('role') != 'theatre_owner':
+    if not user:
+        flash('User not found. Please login again.', 'error')
+        return redirect(url_for('auth.login'))
+
+    theatre = None
+
+    # If theatre owner, find their theatre
+    if user.get('role') == 'theatre_owner':
+        theatre = theatre_bp.mongo.db.theatres.find_one({'owner_id': session['user_id']})
+        if not theatre:
+            flash('Theatre information not found.', 'error')
+            return redirect(url_for('user.settings'))
+
+    # If admin, allow access to a specific theatre only if they created showtimes for it
+    elif user.get('role') == 'admin':
+        theatre_id = request.args.get('theatre_id')
+        if not theatre_id:
+            flash('Please select a theatre to view its dashboard.', 'error')
+            return redirect(url_for('admin.admin'))
+        try:
+            theatre = theatre_bp.mongo.db.theatres.find_one({'_id': ObjectId(theatre_id)})
+        except Exception:
+            theatre = None
+
+        if not theatre:
+            flash('Theatre not found.', 'error')
+            return redirect(url_for('admin.admin'))
+
+        # Verify admin created at least one showtime for this theatre
+        created_count = theatre_bp.mongo.db.showtimes.count_documents({
+            'theatre_id': str(theatre['_id']),
+            'created_by': session['user_id']
+        })
+        if created_count == 0:
+            flash('You do not have permission to view this theatre dashboard.', 'error')
+            return redirect(url_for('admin.admin'))
+
+    else:
         flash('You need to be a theatre owner to access dashboard.', 'error')
-        return redirect(url_for('user.settings'))
-    
-    # Get theatre details from theatres collection
-    theatre = theatre_bp.mongo.db.theatres.find_one({'owner_id': session['user_id']})
-    if not theatre:
-        flash('Theatre information not found.', 'error')
         return redirect(url_for('user.settings'))
     
     # Get all screens for this theatre
