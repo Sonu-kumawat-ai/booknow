@@ -98,6 +98,13 @@
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('movie.add_movie') }}" class="settings-form">
                             <div class="form-group">
+                                <label for="existing_movie_list">Choose From Existing Movies (optional)</label>
+                                <div id="existing_movie_list" class="existing-movie-carousel">
+                                    <!-- JS will populate movie cards here -->
+                                </div>
+                                <small>Click <strong>Select</strong> on a movie card to autofill the form below.</small>
+                            </div>
+                            <div class="form-group">
                                 <label for="title">Movie Title *</label>
                                 <input type="text" id="title" name="title" placeholder="Enter movie title" required>
                             </div>

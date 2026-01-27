@@ -205,6 +205,41 @@ def debug_movies():
     result += "</ul>"
     return result
 
+
+@movie_bp.route('/movies-for-form')
+def movies_for_form():
+    """Return movies for the Add Movie form (JSON)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    user = movie_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+    if not user or user.get('role') not in ('theatre_owner', 'admin'):
+        return jsonify({'error': 'Not authorized'}), 403
+
+    try:
+        movies = list(movie_bp.mongo.db.movies.find({}))
+        result = []
+        for m in movies:
+            genre_list = [g.strip() for g in m.get('genre', '').split(',') if g.strip()]
+            result.append({
+                '_id': str(m.get('_id')),
+                'title': m.get('title', ''),
+                'description': m.get('description', ''),
+                'poster_url': m.get('poster_url', ''),
+                'director': m.get('director', ''),
+                'cast': m.get('cast', ''),
+                'duration': m.get('duration', ''),
+                'release_date': m.get('release_date', ''),
+                'language': m.get('language', ''),
+                'genre': genre_list,
+                'certificate': m.get('certificate', ''),
+                'trailer_url': m.get('trailer_url', '')
+            })
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch movies', 'detail': str(e)}), 500
+
 @movie_bp.route('/movie/<movie_id>')
 def movie_details(movie_id):
     """Movie details page"""

@@ -203,6 +203,90 @@ window.addEventListener('DOMContentLoaded', function() {
     if (totalShowsInput) {
         totalShowsInput.addEventListener('change', generateShowTimeInputs);
     }
+
+    // Load existing movies and render horizontally-scrollable cards for selection
+    const existingMovieContainer = document.getElementById('existing_movie_list');
+    const movieMap = {};
+    if (existingMovieContainer) {
+        fetch('/movies-for-form')
+            .then(response => {
+                if (!response.ok) throw new Error('Not authorized or failed');
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) return;
+                data.forEach(m => {
+                    movieMap[m._id] = m;
+
+                    const card = document.createElement('div');
+                    card.className = 'existing-movie-card';
+
+                    const imgWrap = document.createElement('div');
+                    imgWrap.className = 'existing-movie-poster';
+                    const img = document.createElement('img');
+                    img.src = m.poster_url || 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop';
+                    img.alt = m.title || 'Poster';
+                    imgWrap.appendChild(img);
+
+                    const info = document.createElement('div');
+                    info.className = 'existing-movie-info';
+                    const h4 = document.createElement('h4');
+                    h4.textContent = m.title || 'Untitled';
+                    info.appendChild(h4);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-primary select-movie-btn';
+                    btn.textContent = 'Select';
+                    btn.dataset.movieId = m._id;
+                    btn.addEventListener('click', function() {
+                        const id = this.dataset.movieId;
+                        const mm = movieMap[id];
+                        if (!mm) return;
+
+                        const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+                        setIf('title', mm.title || '');
+                        setIf('description', mm.description || '');
+                        setIf('poster_url', mm.poster_url || '');
+                        setIf('director', mm.director || '');
+                        setIf('cast', mm.cast || '');
+                        setIf('duration', mm.duration || '');
+                        setIf('release_date', mm.release_date || '');
+                        setIf('language', mm.language || '');
+                        setIf('certificate', mm.certificate || '');
+                        setIf('trailer_url', mm.trailer_url || '');
+
+                        // Genres (multi-select)
+                        const gSelect = document.getElementById('genre');
+                        if (gSelect && Array.isArray(mm.genre)) {
+                            Array.from(gSelect.options).forEach(opt => {
+                                opt.selected = mm.genre.includes(opt.value);
+                            });
+                            gSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+
+                        // Update preview
+                        const previewTitle = document.getElementById('preview-title');
+                        if (previewTitle) previewTitle.textContent = mm.title || 'Movie Title';
+                        const previewImage = document.getElementById('preview-image');
+                        if (previewImage && mm.poster_url) previewImage.src = mm.poster_url;
+                        const previewGenre = document.getElementById('preview-genre');
+                        if (previewGenre) previewGenre.textContent = (mm.genre && mm.genre.length) ? mm.genre.join(', ') : 'Genre';
+
+                        // Scroll selected card into view briefly
+                        card.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    });
+
+                    card.appendChild(imgWrap);
+                    card.appendChild(info);
+                    card.appendChild(btn);
+                    existingMovieContainer.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.debug('Could not load movies for form:', err);
+            });
+    }
 });
 
 console.log('Add movie page loaded! ➕🎬');
