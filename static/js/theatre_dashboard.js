@@ -1,12 +1,12 @@
 // Theatre Dashboard functionality
 
-// Delete movie function
-function deleteMovie(movieId, movieTitle) {
-    if (!confirm(`Are you sure you want to delete "${movieTitle}"?\n\nThis will remove all showtimes for this movie at your theatre.`)) {
+
+// Delete showtime function
+function deleteShowtime(showtimeId, movieTitle) {
+    if (!confirm(`Are you sure you want to delete the showtime for "${movieTitle}"?\n\nThis will remove the showtime and all related bookings and reviews.`)) {
         return;
     }
-    
-    fetch(`/delete-movie/${movieId}`, {
+    fetch(`/delete-showtime/${showtimeId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -15,15 +15,15 @@ function deleteMovie(movieId, movieTitle) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message || 'Movie deleted successfully!');
+            alert(data.message || 'Showtime deleted successfully!');
             window.location.reload();
         } else {
-            alert(data.message || 'Failed to delete movie');
+            alert(data.message || 'Failed to delete showtime');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while deleting the movie');
+        alert('An error occurred while deleting the showtime');
     });
 }
 

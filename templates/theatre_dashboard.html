@@ -152,7 +152,7 @@
             <div class="profile-card">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h3>🎬 Your Shows</h3>
-                    <a href="{{ url_for('movie.add_movie') }}" class="btn btn-primary">+ Add New Show</a>
+                    <a href="{{ url_for('movie.add_movie') }}" class="btn" style="background-color: #FFD600; color: #222; font-weight: bold; border: none;">+ Add New Show</a>
                 </div>
                 <div class="card-body">
                     {% if my_shows %}
@@ -168,31 +168,50 @@
                                         <th>Duration</th>
                                         <th>Prices</th>
                                         <th>Available Seats</th>
+                                        <th style="color: #d9534f;">Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% set grouped_shows = {} %}
                                     {% for show in my_shows %}
-                                    <tr>
-                                        <td>
-                                            <img src="{{ show.movie_poster }}" alt="{{ show.movie_title }}" class="movie-thumbnail">
-                                        </td>
-                                        <td>
-                                            <strong>{{ show.movie_title }}</strong>
-                                        </td>
-                                        <td><span class="badge">{{ show.screen_name }}</span></td>
-                                        <td>{{ show.show_date|format_date }}</td>
-                                        <td><strong>{{ show.show_time|format_time }}</strong></td>
-                                        <td>{{ show.movie_duration }} min</td>
-                                        <td>
-                                            Normal: <strong>₹{{ show.ticket_price }}</strong><br>
-                                            VIP: <strong>₹{{ show.vip_price }}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge" style="background: var(--primary-yellow); color: var(--dark-navy);">
-                                                {{ show.available_seats }} seats
-                                            </span>
-                                        </td>
-                                    </tr>
+                                        {% set _ = grouped_shows.setdefault(show.show_date, []).append(show) %}
+                                    {% endfor %}
+                                    {% for date, shows in grouped_shows.items() %}
+                                        <tr>
+                                            <td colspan="10" style="border-top: 4px solid #FFD600; background: #fffde7; text-align:center; font-weight:bold; font-size: 1.1em; letter-spacing: 1px; padding: 0.7em 0; color: #b8860b;">
+                                                <span style="display:inline-block; border-radius: 2em; background: #ffe066; padding: 0.2em 1.5em; border: 1.5px solid #FFD600; box-shadow: 0 1px 4px #ffe06655;">
+                                                    Shows for {{ date|format_date }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% for show in shows %}
+                                            <tr>
+                                                <td>
+                                                    <img src="{{ show.movie_poster }}" alt="{{ show.movie_title }}" class="movie-thumbnail">
+                                                </td>
+                                                <td>
+                                                    <strong>{{ show.movie_title }}</strong>
+                                                </td>
+                                                <td><span class="badge" style="white-space:nowrap;">{{ show.screen_name }}</span></td>
+                                                <td>{{ show.show_date|format_date }}</td>
+                                                <td><strong>{{ show.show_time|format_time }}</strong></td>
+                                                <td>{{ show.movie_duration }} min</td>
+                                                <td>
+                                                    Normal: <strong>₹{{ show.ticket_price }}</strong><br>
+                                                    VIP: <strong>₹{{ show.vip_price }}</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge" style="background: var(--primary-yellow); color: var(--dark-navy);">
+                                                        {{ show.available_seats }} seats
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-danger btn-sm" style="background-color: #d9534f; border-color: #d43f3a; color: #fff;" onclick="deleteShowtime('{{ show.showtime_id }}', '{{ show.movie_title }}')">
+                                                        <span style="font-weight:bold;">Delete</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
                                     {% endfor %}
                                 </tbody>
                             </table>

@@ -6,7 +6,38 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from datetime import datetime
 from bson import ObjectId
 
+from flask import jsonify
+
 theatre_bp = Blueprint('theatre', __name__)
+
+@theatre_bp.route('/delete-showtime/<showtime_id>', methods=['POST'])
+def delete_showtime(showtime_id):
+    """Delete a showtime and all related info (bookings)"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not authorized'}), 401
+    try:
+        obj_id = ObjectId(showtime_id)
+    except Exception:
+        return jsonify({'success': False, 'message': 'Invalid showtime ID'}), 400
+
+    showtime = theatre_bp.mongo.db.showtimes.find_one({'_id': obj_id})
+    if not showtime:
+        return jsonify({'success': False, 'message': 'Showtime not found'}), 404
+
+    # Only allow theatre owner or admin to delete
+    user = theatre_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+    if not user or (user.get('role') not in ['theatre_owner', 'admin']):
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+
+    # Delete bookings for this showtime
+    theatre_bp.mongo.db.bookings.delete_many({'showtime_id': showtime_id})
+    # Delete booking seat info for this showtime (if stored in a separate collection)
+    if 'booking_seats' in theatre_bp.mongo.db.list_collection_names():
+        theatre_bp.mongo.db.booking_seats.delete_many({'showtime_id': showtime_id})
+    # Delete the showtime itself
+    theatre_bp.mongo.db.showtimes.delete_one({'_id': obj_id})
+
+    return jsonify({'success': True, 'message': 'Showtime and related bookings deleted.'})
 
 def init_theatre(mongo):
     """Initialize theatre blueprint with mongo instance"""
@@ -201,7 +232,6 @@ def theatre_dashboard():
     for showtime in all_showtimes:
         movie = theatre_bp.mongo.db.movies.find_one({'_id': ObjectId(showtime['movie_id'])})
         screen = theatre_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
-        
         if movie and screen:
             show = {
                 'showtime_id': str(showtime['_id']),
@@ -216,6 +246,15 @@ def theatre_dashboard():
                 'available_seats': showtime.get('available_seats', 0)
             }
             shows.append(show)
+
+    # Sort shows by show_date and show_time ascending
+    from datetime import datetime as dt
+    def show_sort_key(show):
+        try:
+            return (dt.strptime(show['show_date'], '%Y-%m-%d'), dt.strptime(show['show_time'], '%H:%M'))
+        except Exception:
+            return (show['show_date'], show['show_time'])
+    shows.sort(key=show_sort_key)
     
     # Calculate statistics
     total_shows = len(shows)
