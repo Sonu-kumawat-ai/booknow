@@ -223,6 +223,26 @@ body {
     font-size: 1rem;
 }
 
+/* Overlay button group utility (site-wide) */
+.overlay-container {
+    position: relative;
+}
+
+.btn-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    z-index: 50;
+    pointer-events: auto;
+}
+
+.btn-overlay .btn-sm {
+    margin-left: 0; /* spacing handled by gap */
+}
+
 .btn-primary {
     background: var(--primary-red);
     color: var(--text-light);

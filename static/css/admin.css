@@ -280,6 +280,10 @@
     flex-direction: column;
     gap: 0.5rem;
 }
+/* allow overlay controls inside owner item */
+.owner-item {
+    position: relative;
+}
 
 .owner-top {
     display: flex;
@@ -337,6 +341,64 @@
     font-weight: 700;
 }
 
+/* Improved small button styles for admin */
+.btn-sm {
+    padding: 0.22rem 0.45rem;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    font-weight: 700;
+}
+
+.btn-sm i,
+.btn-sm svg {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+}
+
+.btn-sm.btn-danger {
+    background: var(--primary-red);
+    color: var(--text-light);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.btn-sm.btn-success {
+    background: var(--success);
+    color: var(--text-light);
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Ensure small buttons don't touch each other */
+.btn-sm + .btn-sm {
+    margin-left: 6px;
+}
+
+/* Ensure small buttons in common action groups have consistent spacing */
+.action-btns .btn-sm,
+.movie-actions .btn-sm,
+.owner-actions .btn-sm,
+.request-actions .btn-sm,
+.btn-overlay .btn-sm {
+    margin-left: 6px;
+}
+
+.action-btns .btn-sm:first-child,
+.movie-actions .btn-sm:first-child,
+.owner-actions .btn-sm:first-child,
+.request-actions .btn-sm:first-child,
+.btn-overlay .btn-sm:first-child {
+    margin-left: 0;
+}
+
 /* Owner showtimes preview (hidden until hover) */
 .owner-showtimes {
     display: none;
@@ -367,6 +429,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+/* allow overlay controls inside movie item */
+.movie-item {
+    position: relative;
 }
 
 .movie-top {

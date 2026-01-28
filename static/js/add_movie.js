@@ -60,6 +60,99 @@ if (genreSelect) {
     });
 }
 
+// Custom genre tags UI (syncs with hidden select#genre)
+function initGenreTags() {
+    const select = document.getElementById('genre');
+    if (!select) return;
+
+    // dropdown container
+    const dropdown = document.getElementById('genreDropdown');
+    const tagsContainer = document.getElementById('genreTags');
+    const input = document.getElementById('genreInput');
+    const box = document.getElementById('genreBox');
+
+    if (!dropdown || !tagsContainer || !input || !box) return;
+
+    // Populate dropdown from select options
+    dropdown.innerHTML = '';
+    Array.from(select.options).forEach(opt => {
+        const o = document.createElement('div');
+        o.className = 'genre-option';
+        o.dataset.value = opt.value;
+        o.textContent = opt.value;
+        if (opt.selected) o.classList.add('selected');
+        o.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleGenre(opt.value);
+        });
+        dropdown.appendChild(o);
+    });
+
+    function renderTags() {
+        const selected = Array.from(select.selectedOptions).map(o => o.value);
+        tagsContainer.innerHTML = '';
+        selected.forEach(val => {
+            const tag = document.createElement('span');
+            tag.className = 'genre-tag';
+            tag.textContent = val;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-genre';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deselectGenre(val);
+            });
+
+            tag.appendChild(removeBtn);
+            tagsContainer.appendChild(tag);
+        });
+        // Keep the input empty (tags show selections); input retained for focus/accessibility
+        input.value = '';
+    }
+
+    function toggleGenre(val) {
+        const opt = Array.from(select.options).find(o => o.value === val);
+        if (!opt) return;
+        opt.selected = !opt.selected;
+        // update dropdown option state
+        const ddOpt = dropdown.querySelector(`.genre-option[data-value="${CSS.escape(val)}"]`);
+        if (ddOpt) ddOpt.classList.toggle('selected', opt.selected);
+        renderTags();
+        // notify existing listeners (preview update)
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function deselectGenre(val) {
+        const opt = Array.from(select.options).find(o => o.value === val);
+        if (!opt) return;
+        opt.selected = false;
+        const ddOpt = dropdown.querySelector(`.genre-option[data-value="${CSS.escape(val)}"]`);
+        if (ddOpt) ddOpt.classList.remove('selected');
+        renderTags();
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Toggle dropdown visibility
+    box.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+        dropdown.setAttribute('aria-hidden', dropdown.classList.contains('open') ? 'false' : 'true');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!box.contains(e.target)) {
+            dropdown.classList.remove('open');
+            dropdown.setAttribute('aria-hidden', 'true');
+        }
+    });
+
+    // Initial render
+    renderTags();
+}
+
 // Load screens for selected theatre (for admin)
 function loadTheatreScreens(theatreId) {
     const screenSelect = document.getElementById('screen_id');
@@ -204,10 +297,53 @@ window.addEventListener('DOMContentLoaded', function() {
         totalShowsInput.addEventListener('change', generateShowTimeInputs);
     }
 
+    // Initialize custom genre tag selector
+    try { initGenreTags(); } catch (e) { console.debug('Genre tags init failed', e); }
+
     // Load existing movies and render horizontally-scrollable cards for selection
     const existingMovieContainer = document.getElementById('existing_movie_list');
     const movieMap = {};
     if (existingMovieContainer) {
+        // Helper to clear autofill fields and reset preview/buttons
+        const clearAutofill = () => {
+            const ids = ['title','description','poster_url','director','cast','duration','release_date','language','certificate','trailer_url'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
+            });
+
+            const gSelect = document.getElementById('genre');
+            if (gSelect) {
+                Array.from(gSelect.options).forEach(opt => opt.selected = false);
+                gSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            const previewTitle = document.getElementById('preview-title');
+            if (previewTitle) previewTitle.textContent = 'Movie Title';
+            const previewImage = document.getElementById('preview-image');
+            if (previewImage) previewImage.src = 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop';
+            const previewGenre = document.getElementById('preview-genre');
+            if (previewGenre) previewGenre.textContent = 'Genre';
+
+            // reset all select buttons
+            const allBtns = existingMovieContainer.querySelectorAll('.select-movie-btn');
+            allBtns.forEach(b => {
+                b.dataset.selected = 'false';
+                b.textContent = 'Select';
+                b.classList.remove('selected');
+            });
+        };
+
+        // Add a clear-autofill button above the list for convenience
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'btn btn-outline';
+        clearBtn.id = 'clear_autofill_btn';
+        clearBtn.textContent = 'Clear Autofill';
+        clearBtn.addEventListener('click', clearAutofill);
+        existingMovieContainer.insertAdjacentElement('beforebegin', clearBtn);
+
         fetch('/movies-for-form')
             .then(response => {
                 if (!response.ok) throw new Error('Not authorized or failed');
@@ -239,10 +375,30 @@ window.addEventListener('DOMContentLoaded', function() {
                     btn.className = 'btn btn-primary select-movie-btn';
                     btn.textContent = 'Select';
                     btn.dataset.movieId = m._id;
+                    btn.dataset.selected = 'false';
                     btn.addEventListener('click', function() {
                         const id = this.dataset.movieId;
                         const mm = movieMap[id];
                         if (!mm) return;
+
+                        // Toggle: if already selected, deselect and clear autofill
+                        if (this.dataset.selected === 'true') {
+                            clearAutofill();
+                            return;
+                        }
+
+                        // Ensure only one selected at a time
+                        const allBtns = existingMovieContainer.querySelectorAll('.select-movie-btn');
+                        allBtns.forEach(b => {
+                            b.dataset.selected = 'false';
+                            b.textContent = 'Select';
+                            b.classList.remove('selected');
+                        });
+
+                        // Mark this button as selected and change label to 'Deselect'
+                        this.dataset.selected = 'true';
+                        this.textContent = 'Deselect';
+                        this.classList.add('selected');
 
                         const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
                         setIf('title', mm.title || '');

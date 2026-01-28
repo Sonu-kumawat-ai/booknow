@@ -66,31 +66,15 @@ def add_movie():
         screen_ids = request.form.getlist('screen_id[]')
         ticket_prices = request.form.getlist('ticket_price[]')
         vip_prices = request.form.getlist('vip_price[]')
-        
-        # Validation
+
+        # Basic required fields validation
         if not all([title, description, poster_url, director, cast, duration, release_date, language, genre]):
             flash('All required fields must be filled!', 'error')
             return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-        
-        if not show_dates or not show_times or not screen_ids or not ticket_prices or not vip_prices:
-            flash('Please provide valid show details including screens, dates, times, and prices!', 'error')
-            return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-        
-        if len(show_dates) != len(show_times) or len(show_dates) != len(screen_ids) or len(show_dates) != len(ticket_prices) or len(show_dates) != len(vip_prices):
-            flash('Please provide screen and prices for all showtimes!', 'error')
-            return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-        
-        # Validate show dates are not before release date
-        release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
-        for show_date in show_dates:
-            show_date_obj = datetime.strptime(show_date, '%Y-%m-%d').date()
-            if show_date_obj < release_date_obj:
-                flash(f'Show date ({show_date}) cannot be before the release date ({release_date})!', 'error')
-                return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-        
+
         # Convert title to uppercase
         title = title.upper()
-        
+
         # Check if movie already exists (based on title, duration, release_date, and director)
         existing_movie = movie_bp.mongo.db.movies.find_one({
             'title': title,
@@ -98,13 +82,15 @@ def add_movie():
             'release_date': release_date,
             'director': director
         })
-        
+
         if existing_movie:
-            # Movie already exists, use existing movie_id
             movie_id = existing_movie['_id']
-            flash(f'Movie "{title}" already exists. Adding showtimes to existing movie.', 'success')
+            # message differs based on role
+            if user.get('role') == 'theatre_owner':
+                flash(f'Movie "{title}" already exists. Adding showtimes to existing movie.', 'success')
+            else:
+                flash(f'Movie "{title}" already exists.', 'success')
         else:
-            # Create new movie
             movie_data = {
                 'title': title,
                 'description': description,
@@ -119,79 +105,93 @@ def add_movie():
                 'trailer_url': trailer_url,
                 'created_at': datetime.utcnow()
             }
-            
             movie_id = movie_bp.mongo.db.movies.insert_one(movie_data).inserted_id
-        
-        # Create showtimes for this movie
-        movie_duration = int(duration)
-        
-        # Validate each showtime for conflicts
-        for i in range(len(show_dates)):
-            show_date = show_dates[i]
-            show_time = show_times[i]
-            screen_id = screen_ids[i]
-            
-            # Get screen details
-            screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(screen_id)})
-            if not screen:
-                flash(f'Invalid screen selected for show {i+1}', 'error')
+
+        # If the requester is a theatre owner, require and create showtimes
+        if user.get('role') == 'theatre_owner':
+            if not show_dates or not show_times or not screen_ids or not ticket_prices or not vip_prices:
+                flash('Please provide valid show details including screens, dates, times, and prices!', 'error')
                 return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-            
-            screen_theatre_id = screen.get('theatre_id')
-            
-            # Calculate end time for this show (add buffer of 30 minutes for cleaning)
-            show_datetime = datetime.strptime(f"{show_date} {show_time}", '%Y-%m-%d %H:%M')
-            show_end_datetime = show_datetime + timedelta(minutes=movie_duration + 30)
-            
-            # Check for conflicting shows in the same screen on the same date
-            existing_showtimes = list(movie_bp.mongo.db.showtimes.find({
-                'screen_id': screen_id,
-                'show_date': show_date,
-                'status': 'active'
-            }))
-            
-            has_conflict = False
-            for existing in existing_showtimes:
-                # Get the movie duration for existing show
-                existing_movie = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(existing['movie_id'])})
-                if not existing_movie:
-                    continue
-                    
-                existing_duration = existing_movie.get('duration', 120)
-                existing_datetime = datetime.strptime(f"{existing['show_date']} {existing['show_time']}", '%Y-%m-%d %H:%M')
-                existing_end_datetime = existing_datetime + timedelta(minutes=existing_duration + 30)
-                
-                # Check if times overlap
-                if (show_datetime < existing_end_datetime and show_end_datetime > existing_datetime):
-                    has_conflict = True
-                    existing_movie_title = existing_movie.get('title', 'Unknown')
-                    flash(f'Show conflict! Screen is occupied from {existing["show_time"]} to {existing_end_datetime.strftime("%H:%M")} by "{existing_movie_title}" on {show_date}. Please choose a different time.', 'error')
-                    break
-            
-            if has_conflict:
+
+            if len(show_dates) != len(show_times) or len(show_dates) != len(screen_ids) or len(show_dates) != len(ticket_prices) or len(show_dates) != len(vip_prices):
+                flash('Please provide screen and prices for all showtimes!', 'error')
                 return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-            
-            # No conflict, create the showtime
-            showtime = {
-                'movie_id': str(movie_id),
-                'theatre_id': screen_theatre_id,
-                'screen_id': screen_id,
-                'show_date': show_date,
-                'show_time': show_time,
-                'ticket_price': int(ticket_prices[i]),
-                'vip_price': int(vip_prices[i]),
-                'available_seats': screen.get('seating_capacity', 100),
-                'status': 'active',
-                'created_date': datetime.utcnow(),
-                'created_by': session.get('user_id')
-            }
-            movie_bp.mongo.db.showtimes.insert_one(showtime)
-        
-        flash('Movie and showtimes added successfully!', 'success')
-        if user.get('role') == 'admin':
-            return redirect(url_for('admin.admin'))
-        else:
+
+            # Validate show dates are not before release date
+            release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
+            for show_date in show_dates:
+                show_date_obj = datetime.strptime(show_date, '%Y-%m-%d').date()
+                if show_date_obj < release_date_obj:
+                    flash(f'Show date ({show_date}) cannot be before the release date ({release_date})!', 'error')
+                    return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+
+            # Create showtimes for this movie
+            movie_duration = int(duration)
+            for i in range(len(show_dates)):
+                show_date = show_dates[i]
+                show_time = show_times[i]
+                screen_id = screen_ids[i]
+
+                # Get screen details
+                screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(screen_id)})
+                if not screen:
+                    flash(f'Invalid screen selected for show {i+1}', 'error')
+                    return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+
+                screen_theatre_id = screen.get('theatre_id')
+
+                # Calculate end time for this show (add buffer of 30 minutes for cleaning)
+                show_datetime = datetime.strptime(f"{show_date} {show_time}", '%Y-%m-%d %H:%M')
+                show_end_datetime = show_datetime + timedelta(minutes=movie_duration + 30)
+
+                # Check for conflicting shows in the same screen on the same date
+                existing_showtimes = list(movie_bp.mongo.db.showtimes.find({
+                    'screen_id': screen_id,
+                    'show_date': show_date,
+                    'status': 'active'
+                }))
+
+                has_conflict = False
+                for existing in existing_showtimes:
+                    existing_movie = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(existing['movie_id'])})
+                    if not existing_movie:
+                        continue
+
+                    existing_duration = existing_movie.get('duration', 120)
+                    existing_datetime = datetime.strptime(f"{existing['show_date']} {existing['show_time']}", '%Y-%m-%d %H:%M')
+                    existing_end_datetime = existing_datetime + timedelta(minutes=existing_duration + 30)
+
+                    if (show_datetime < existing_end_datetime and show_end_datetime > existing_datetime):
+                        has_conflict = True
+                        existing_movie_title = existing_movie.get('title', 'Unknown')
+                        flash(f'Show conflict! Screen is occupied from {existing["show_time"]} to {existing_end_datetime.strftime("%H:%M")} by "{existing_movie_title}" on {show_date}. Please choose a different time.', 'error')
+                        break
+
+                if has_conflict:
+                    return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+
+                # No conflict, create the showtime
+                showtime = {
+                    'movie_id': str(movie_id),
+                    'theatre_id': screen_theatre_id,
+                    'screen_id': screen_id,
+                    'show_date': show_date,
+                    'show_time': show_time,
+                    'ticket_price': int(ticket_prices[i]),
+                    'vip_price': int(vip_prices[i]),
+                    'available_seats': screen.get('seating_capacity', 100),
+                    'status': 'active',
+                    'created_date': datetime.utcnow(),
+                    'created_by': session.get('user_id')
+                }
+                movie_bp.mongo.db.showtimes.insert_one(showtime)
+
+            flash('Movie and showtimes added successfully!', 'success')
             return redirect(url_for('theatre.theatre_dashboard'))
+
+        # Admin adds movie only (no showtimes)
+        flash('Movie added successfully!', 'success')
+        return redirect(url_for('admin.admin'))
     
     return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
 
@@ -381,45 +381,93 @@ def delete_movie(movie_id):
         return jsonify({'success': False, 'message': 'Not authorized'}), 403
     
     try:
-        # Get the movie
-        movie = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(movie_id)})
-        if not movie:
+        # Get the movie (try ObjectId first, fallback to string id)
+        mv = None
+        try:
+            mv = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(movie_id)})
+        except Exception:
+            mv = movie_bp.mongo.db.movies.find_one({'_id': movie_id})
+
+        if not mv:
             return jsonify({'success': False, 'message': 'Movie not found'}), 404
-        
-        # If theatre owner, verify they own the showtimes
+
+        # If theatre owner, only allow deleting showtimes belonging to their theatre
         if user.get('role') == 'theatre_owner':
             theatre = movie_bp.mongo.db.theatres.find_one({'owner_id': session['user_id']})
             if not theatre:
                 return jsonify({'success': False, 'message': 'Theatre not found'}), 404
-            
-            # Check if any showtime belongs to this theatre
-            showtime = movie_bp.mongo.db.showtimes.find_one({
-                'movie_id': movie_id,
-                'theatre_id': str(theatre['_id'])
-            })
-            if not showtime:
-                return jsonify({'success': False, 'message': 'You do not have permission to delete this movie'}), 403
-            
-            # Delete only showtimes for this theatre
-            movie_bp.mongo.db.showtimes.delete_many({
-                'movie_id': movie_id,
-                'theatre_id': str(theatre['_id'])
-            })
-            
-            # Check if movie has other showtimes from other theatres
-            other_showtimes = movie_bp.mongo.db.showtimes.count_documents({'movie_id': movie_id})
-            if other_showtimes == 0:
-                # No other showtimes, delete the movie
-                movie_bp.mongo.db.movies.delete_one({'_id': ObjectId(movie_id)})
-        else:
-            # Admin can delete everything
+
+            # Delete showtimes for this theatre only
+            movie_bp.mongo.db.showtimes.delete_many({'movie_id': movie_id, 'theatre_id': str(theatre['_id'])})
+
+            # If no remaining showtimes for this movie, remove the movie as well (and its reviews)
+            remaining = movie_bp.mongo.db.showtimes.count_documents({'movie_id': movie_id})
+            if remaining == 0:
+                try:
+                    movie_bp.mongo.db.reviews.delete_many({'movie_id': movie_id})
+                except Exception:
+                    pass
+                movie_bp.mongo.db.movies.delete_one({'_id': mv['_id']})
+
+            return jsonify({'success': True, 'message': 'Showtimes for your theatre deleted'}), 200
+
+        # Admin flow: delete all related data for the movie
+        # 1) Gather showtimes for this movie
+        showtimes = list(movie_bp.mongo.db.showtimes.find({'movie_id': movie_id}))
+        showtime_ids = [str(st.get('_id')) for st in showtimes if st.get('_id')]
+
+        # 2) Delete booking seats tied to these showtimes
+        try:
+            if showtime_ids:
+                movie_bp.mongo.db.booking_seats.delete_many({'showtime_id': {'$in': showtime_ids}})
+        except Exception:
+            pass
+
+        # 3) Find bookings for these showtimes and delete payments + bookings
+        booking_ids = []
+        try:
+            if showtime_ids:
+                bookings = list(movie_bp.mongo.db.bookings.find({'showtime_id': {'$in': showtime_ids}}))
+                booking_ids = [str(b.get('_id')) for b in bookings if b.get('_id')]
+                if booking_ids:
+                    # delete payments related to these bookings
+                    try:
+                        movie_bp.mongo.db.payments.delete_many({'booking_id': {'$in': booking_ids}})
+                    except Exception:
+                        pass
+                    # delete bookings
+                    movie_bp.mongo.db.bookings.delete_many({'_id': {'$in': [ObjectId(bid) for bid in booking_ids]}})
+        except Exception:
+            pass
+
+        # 4) As a safety, also delete booking_seats by booking_id
+        try:
+            if booking_ids:
+                movie_bp.mongo.db.booking_seats.delete_many({'booking_id': {'$in': booking_ids}})
+        except Exception:
+            pass
+
+        # 5) Delete reviews for the movie
+        try:
+            movie_bp.mongo.db.reviews.delete_many({'movie_id': movie_id})
+        except Exception:
+            pass
+
+        # 6) Delete showtimes
+        try:
             movie_bp.mongo.db.showtimes.delete_many({'movie_id': movie_id})
-            movie_bp.mongo.db.movies.delete_one({'_id': ObjectId(movie_id)})
-        
-        return jsonify({'success': True, 'message': 'Movie deleted successfully'})
+        except Exception:
+            pass
+
+        # 7) Finally delete the movie document
+        try:
+            movie_bp.mongo.db.movies.delete_one({'_id': mv['_id']})
+        except Exception:
+            pass
+
+        return jsonify({'success': True, 'message': 'Movie and all related data deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
-        return jsonify({'error': 'Not authorized'}), 403
     
     try:
         screens = list(movie_bp.mongo.db.screens.find({'theatre_id': theatre_id, 'status': 'active'}))

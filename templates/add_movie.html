@@ -41,10 +41,12 @@
                         </a>
                         {% if user_data and (user_data.role == 'theatre_owner' or user_data.role == 'admin') %}
                             <div class="dropdown-divider"></div>
-                            <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
-                                <span class="dropdown-icon">📊</span>
-                                Theatre Dashboard
-                            </a>
+                            {% if user_data.role == 'theatre_owner' %}
+                                <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">📊</span>
+                                    Theatre Dashboard
+                                </a>
+                            {% endif %}
                             <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
                                 <span class="dropdown-icon">🎬</span>
                                 Add Movie
@@ -165,20 +167,30 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="genre">Genre(s) *</label>
-                                        <select id="genre" name="genre" multiple size="5" required>
-                                            <option value="Action">Action</option>
-                                            <option value="Comedy">Comedy</option>
-                                            <option value="Drama">Drama</option>
-                                            <option value="Horror">Horror</option>
-                                            <option value="Romance">Romance</option>
-                                            <option value="Sci-Fi">Sci-Fi</option>
-                                            <option value="Thriller">Thriller</option>
-                                            <option value="Adventure">Adventure</option>
-                                            <option value="Animation">Animation</option>
-                                            <option value="Fantasy">Fantasy</option>
-                                            <option value="Documentary">Documentary</option>
-                                        </select>
-                                        <small>You can select multiple genres (Ctrl/Cmd + click)</small>
+                                                <!-- Hidden native multi-select kept for form submission -->
+                                                <select id="genre" name="genre" multiple size="5" required style="display:none;">
+                                                    <option value="Action">Action</option>
+                                                    <option value="Comedy">Comedy</option>
+                                                    <option value="Drama">Drama</option>
+                                                    <option value="Horror">Horror</option>
+                                                    <option value="Romance">Romance</option>
+                                                    <option value="Sci-Fi">Sci-Fi</option>
+                                                    <option value="Thriller">Thriller</option>
+                                                    <option value="Adventure">Adventure</option>
+                                                    <option value="Animation">Animation</option>
+                                                    <option value="Fantasy">Fantasy</option>
+                                                    <option value="Documentary">Documentary</option>
+                                                </select>
+
+                                                <!-- Custom genre selector with tags -->
+                                                <div class="genre-control">
+                                                    <div id="genreBox" class="genre-box" tabindex="0">
+                                                        <div id="genreTags" class="genre-tags"></div>
+                                                        <input type="text" id="genreInput" placeholder="Select genres" readonly>
+                                                        <div id="genreDropdown" class="genre-dropdown" aria-hidden="true"></div>
+                                                    </div>
+                                                    <small>Click to select genres; click × to remove</small>
+                                                </div>
                                 </div>
 
                                 <div class="form-group">
@@ -199,24 +211,27 @@
                                 <small>Optional - link to movie trailer</small>
                             </div>
 
-                            {% if all_theatres %}
-                            <div class="form-group">
-                                <label for="theatre_id">Select Theatre *</label>
-                                <select id="theatre_id" name="theatre_id" required>
-                                    <option value="">Choose a theatre</option>
-                                    {% for t in all_theatres %}
-                                    <option value="{{ t._id }}">{{ t.name }} - {{ t.city }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            {% else %}
-                            <div class="form-group">
-                                <label for="theatre_id">Theatre</label>
-                                <input type="text" value="{{ theatre.name }} - {{ theatre.city }}" disabled class="disabled-input">
-                                <input type="hidden" id="theatre_id" name="theatre_id" value="{{ theatre._id }}">
-                            </div>
+                            {% if user_data and user_data.role == 'theatre_owner' %}
+                                {% if all_theatres %}
+                                <div class="form-group">
+                                    <label for="theatre_id">Select Theatre *</label>
+                                    <select id="theatre_id" name="theatre_id" required>
+                                        <option value="">Choose a theatre</option>
+                                        {% for t in all_theatres %}
+                                        <option value="{{ t._id }}">{{ t.name }} - {{ t.city }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% else %}
+                                <div class="form-group">
+                                    <label for="theatre_id">Theatre</label>
+                                    <input type="text" value="{{ theatre.name }} - {{ theatre.city }}" disabled class="disabled-input">
+                                    <input type="hidden" id="theatre_id" name="theatre_id" value="{{ theatre._id }}">
+                                </div>
+                                {% endif %}
                             {% endif %}
 
+                            {% if user_data and user_data.role == 'theatre_owner' %}
                             <div class="form-group" id="screenListContainer" style="display: none;">
                                 <label>Available Screens</label>
                                 <select id="screen_id" {% if all_theatres %}disabled{% endif %}>
@@ -231,7 +246,9 @@
                                 </select>
                                 <small>Each show can be assigned to a different screen</small>
                             </div>
+                            {% endif %}
 
+                            {% if user_data and user_data.role == 'theatre_owner' %}
                             <div class="form-group">
                                 <label for="total_shows">Total Shows *</label>
                                 <select id="total_shows" name="total_shows" required>
@@ -251,6 +268,7 @@
                                 <div id="showTimeInputs" class="show-time-inputs"></div>
                                 <small>Enter the date and time for each show</small>
                             </div>
+                            {% endif %}
 
                             <div class="form-buttons">
                                 <button type="submit" class="btn btn-primary">Add Movie</button>
