@@ -41,6 +41,20 @@
                             Settings
                         </a>
                         <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                            <span class="dropdown-icon">📊</span>
+                            Theatre Dashboard
+                        </a>
+                        <a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🎬</span>
+                            Add Movie
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🛡️</span>
+                            Admin Panel
+                        </a>
+                        <div class="dropdown-divider"></div>
                         <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
                             <span class="dropdown-icon">🚪</span>
                             Logout

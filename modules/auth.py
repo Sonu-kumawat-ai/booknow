@@ -211,11 +211,16 @@ def login():
         # Find user
         user = auth_bp.mongo.db.users.find_one({'email': email})
         
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = str(user['_id'])
-            session['username'] = user['username']
-            flash('Login successful!', 'success')
-            return redirect(url_for('main.index'))
+        if user:
+            # Check if user has a password set (not just Google-only account)
+            if user.get('password') and check_password_hash(user['password'], password):
+                session['user_id'] = str(user['_id'])
+                session['username'] = user['username']
+                flash('Login successful!', 'success')
+                return redirect(url_for('main.index'))
+            else:
+                flash('Invalid email or password!', 'error')
+                return render_template('login.html')
         else:
             flash('Invalid email or password!', 'error')
             return render_template('login.html')
@@ -313,40 +318,42 @@ def google_callback():
             name = userinfo_response.json().get("name", email.split('@')[0])
             picture = userinfo_response.json().get("picture")
             
-            # Check if user exists
+            # Check if user exists by email
             user = auth_bp.mongo.db.users.find_one({'email': email})
             
             if user:
-                # Update existing user with Google info if not already set
+                # User exists - link Google account if not already linked
+                update_data = {'last_login': datetime.utcnow()}
+                
                 if not user.get('google_id'):
-                    auth_bp.mongo.db.users.update_one(
-                        {'_id': user['_id']},
-                        {'$set': {
-                            'google_id': google_id,
-                            'profile_picture': picture,
-                            'last_login': datetime.utcnow()
-                        }}
-                    )
+                    # First time linking Google account to existing email/password account
+                    update_data['google_id'] = google_id
+                    update_data['profile_picture'] = picture
+                    flash('Google account linked successfully! You can now login with either method.', 'success')
                 else:
-                    auth_bp.mongo.db.users.update_one(
-                        {'_id': user['_id']},
-                        {'$set': {'last_login': datetime.utcnow()}}
-                    )
+                    # Already linked - just logging in
+                    flash('Welcome back!', 'success')
+                
+                auth_bp.mongo.db.users.update_one(
+                    {'_id': user['_id']},
+                    {'$set': update_data}
+                )
                 
                 # Log in the user
                 session['user_id'] = str(user['_id'])
                 session['username'] = user['username']
-                flash('Welcome back!', 'success')
             else:
-                # Create new user
+                # New user - create account with Google
                 new_user = {
                     'username': name,
                     'email': email,
-                    'password': generate_password_hash(google_id),  # Use Google ID as password
+                    'password': generate_password_hash(google_id + email),  # Set a password for potential future use
                     'google_id': google_id,
+                    'profile_picture': picture,
                     'role': 'user',
                     'created_at': datetime.utcnow(),
-                    'last_login': datetime.utcnow()
+                    'last_login': datetime.utcnow(),
+                    'email_verified': True
                 }
                 
                 result = auth_bp.mongo.db.users.insert_one(new_user)

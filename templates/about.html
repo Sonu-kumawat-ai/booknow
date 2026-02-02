@@ -24,7 +24,50 @@
 			<div class="nav-auth">
 				{% if logged_in %}
 					<span class="welcome-text">Welcome, {{ username }}!</span>
-					<a href="{{ url_for('user.profile') }}" class="btn btn-outline">Profile</a>
+					<div class="profile-dropdown">
+						<button class="profile-icon" id="profileToggle">
+							<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<circle cx="12" cy="12" r="10"></circle>
+								<circle cx="12" cy="8" r="3"></circle>
+								<path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+							</svg>
+						</button>
+						<div class="dropdown-menu" id="profileMenu">
+							<a href="{{ url_for('user.profile') }}" class="dropdown-item">
+								<span class="dropdown-icon">👤</span>
+								My Profile
+							</a>
+							<a href="{{ url_for('user.settings') }}" class="dropdown-item">
+								<span class="dropdown-icon">⚙️</span>
+								Settings
+							</a>
+							{% if user_data and (user_data.role == 'theatre_owner' or user_data.role == 'admin') %}
+								<div class="dropdown-divider"></div>
+								{% if user_data.role == 'theatre_owner' %}
+									<a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+										<span class="dropdown-icon">📊</span>
+										Theatre Dashboard
+									</a>
+								{% endif %}
+								<a href="{{ url_for('movie.add_movie') }}" class="dropdown-item">
+									<span class="dropdown-icon">🎬</span>
+									Add Movie
+								</a>
+							{% endif %}
+							{% if user_data and user_data.role == 'admin' %}
+								<div class="dropdown-divider"></div>
+								<a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+									<span class="dropdown-icon">🛡️</span>
+									Admin Panel
+								</a>
+							{% endif %}
+							<div class="dropdown-divider"></div>
+							<a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+								<span class="dropdown-icon">🚪</span>
+								Logout
+							</a>
+						</div>
+					</div>
 				{% else %}
 					<a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
 					<a href="{{ url_for('auth.register') }}" class="btn btn-primary">Sign Up</a>

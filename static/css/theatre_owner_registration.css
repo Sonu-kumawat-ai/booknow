@@ -1,4 +1,9 @@
 /* Theatre Owner Registration */
+/* Prevent navbar overlap */
+body {
+    padding-top: 80px;
+}
+
 .section-padding {
     padding: 6rem 2rem;
     background: var(--bg-light);

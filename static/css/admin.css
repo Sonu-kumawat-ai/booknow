@@ -1,4 +1,9 @@
 /* Admin Dashboard */
+/* Prevent navbar overlap */
+body {
+    padding-top: 80px;
+}
+
 .settings-header {
     text-align: center;
     margin-bottom: 3rem;
@@ -574,19 +579,186 @@
     border-radius: var(--radius-sm);
 }
 
-/* Responsive Design for Movies Grid */
+/* Responsive Design */
 @media (max-width: 1200px) {
-    .movies-grid {
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .theatre-info-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
-    .movies-grid {
-        grid-template-columns: 1fr;
+@media (max-width: 992px) {
+    .settings-header h1 {
+        font-size: 2rem;
     }
     
-    .movie-poster {
-        height: 350px;
+    .card-body {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .settings-header p {
+        font-size: 1rem;
+    }
+    
+    .admin-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .admin-stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .card-header {
+        padding: 1.5rem;
+    }
+    
+    .card-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .request-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .request-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .request-actions .btn-sm {
+        flex: 1;
+        min-width: 100px;
+    }
+    
+    .theatre-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .owner-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .owner-actions {
+        width: 100%;
+    }
+    
+    .owner-actions .btn-sm {
+        flex: 1;
+    }
+    
+    .movie-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .movie-actions {
+        width: 100%;
+    }
+    
+    .movie-actions .btn-sm {
+        flex: 1;
+    }
+    
+    .movie-details-extra {
+        font-size: 0.85rem;
+    }
+    
+    .requests-table {
+        font-size: 0.9rem;
+    }
+    
+    .requests-table th,
+    .requests-table td {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-info h4 {
+        font-size: 0.85rem;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+    
+    .request-detail-card {
+        padding: 1.5rem;
+    }
+    
+    .request-user-info h4 {
+        font-size: 1.1rem;
+    }
+    
+    .theatre-details h5 {
+        font-size: 1rem;
+    }
+    
+    .owner-item,
+    .movie-item {
+        padding: 0.75rem;
+    }
+    
+    .owner-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    .owner-info h4,
+    .movie-info h4 {
+        font-size: 0.95rem;
+    }
+    
+    .owner-meta,
+    .movie-meta {
+        font-size: 0.8rem;
+    }
+    
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .movie-poster-small {
+        width: 48px;
+        height: 48px;
     }
 }

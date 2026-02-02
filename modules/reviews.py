@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 
 reviews_bp = Blueprint('reviews', __name__)
 
@@ -22,6 +22,56 @@ def add_review():
 
     if not movie_id or rating is None:
         return jsonify({'success': False, 'error': 'movie_id and rating required'}), 400
+
+    user_id = str(session['user_id'])
+
+    # Check if user has booked tickets for this movie
+    # Find all showtimes for this movie
+    showtimes = list(reviews_bp.mongo.db.showtimes.find({'movie_id': movie_id}))
+    
+    if not showtimes:
+        return jsonify({'success': False, 'error': 'No showtimes found for this movie'}), 400
+    
+    showtime_ids = [str(st['_id']) for st in showtimes]
+    
+    # Find user's bookings for these showtimes
+    user_bookings = list(reviews_bp.mongo.db.bookings.find({
+        'user_id': user_id,
+        'showtime_id': {'$in': showtime_ids},
+        'status': 'confirmed'
+    }))
+    
+    if not user_bookings:
+        return jsonify({'success': False, 'error': 'You can only review movies you have watched. Please book a ticket first.'}), 403
+    
+    # Check if at least one show has ended
+    has_watched = False
+    current_time = datetime.utcnow()
+    
+    for booking in user_bookings:
+        # Find the showtime details
+        showtime = reviews_bp.mongo.db.showtimes.find_one({'_id': ObjectId(booking['showtime_id'])})
+        if showtime:
+            show_date = showtime.get('show_date')
+            show_time = showtime.get('show_time')
+            
+            if show_date and show_time:
+                try:
+                    # Parse show datetime
+                    show_datetime = datetime.strptime(f"{show_date} {show_time}", '%Y-%m-%d %H:%M')
+                    # Add 3 hours for movie duration (approximate)
+                    show_end_time = show_datetime + timedelta(hours=3)
+                    
+                    # Check if show has ended
+                    if current_time >= show_end_time:
+                        has_watched = True
+                        break
+                except Exception as e:
+                    print(f"Error parsing showtime: {e}")
+                    continue
+    
+    if not has_watched:
+        return jsonify({'success': False, 'error': 'You can only review after the show has ended. Please wait until your show completes.'}), 403
 
     # Prevent reviews before movie release
     try:
@@ -52,7 +102,6 @@ def add_review():
     if rating < 0 or rating > 10:
         return jsonify({'success': False, 'error': 'rating must be between 0 and 10'}), 400
 
-    user_id = str(session['user_id'])
     user = reviews_bp.mongo.db.users.find_one({'_id': ObjectId(user_id)})
     username = user.get('username') if user else 'Anonymous'
 

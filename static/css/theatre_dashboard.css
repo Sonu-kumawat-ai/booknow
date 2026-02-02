@@ -1,4 +1,9 @@
 /* Theatre Dashboard */
+/* Prevent navbar overlap */
+body {
+    padding-top: 80px;
+}
+
 .settings-header {
     text-align: center;
     margin-bottom: 3rem;

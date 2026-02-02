@@ -341,18 +341,333 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-@media (max-width: 768px) {
-    .movie-booking-info {
-        flex-direction: column;
-        text-align: center;
+/* Responsive Design */
+@media (max-width: 992px) {
+    .seat-selection-section {
+        padding: 90px 0 30px;
+    }
+
+    .booking-header {
+        padding: 1.5rem;
+    }
+
+    .booking-details h1 {
+        font-size: 1.5rem;
     }
 
     .selection-bar {
+        padding: 1.5rem 2rem;
+        gap: 3rem;
+    }
+
+    .seat {
+        width: 32px;
+        height: 32px;
+        font-size: 0.65rem;
+    }
+
+    .row-label {
+        width: 25px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .aisle-gap {
+        width: 30px;
+        height: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .seat-selection-section {
+        padding: 80px 0 20px;
+    }
+
+    .booking-header {
+        padding: 1rem;
+    }
+
+    .movie-booking-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .booking-poster {
+        width: 80px;
+        height: 112px;
+    }
+
+    .booking-details h1 {
+        font-size: 1.3rem;
+    }
+
+    .booking-details p {
+        font-size: 0.9rem;
+    }
+
+    .selection-bar {
+        padding: 1.5rem 1rem;
         flex-direction: column;
         gap: 1.5rem;
     }
 
+    .selection-item {
+        width: 100%;
+    }
+
+    .ticket-selector {
+        justify-content: center;
+    }
+
+    .showtime-display {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .seat-selection-container {
+        padding: 1rem;
+    }
+
+    .seat-class-title {
+        font-size: 1rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .screen {
+        padding: 0.5rem 2rem;
+        font-size: 0.9rem;
+    }
+
+    .seat {
+        width: 28px;
+        height: 28px;
+        font-size: 0.6rem;
+        border-radius: 6px;
+    }
+
+    .row-label {
+        width: 20px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .aisle-gap {
+        width: 20px;
+        height: 28px;
+    }
+
+    .seat-row {
+        gap: 0.3rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .seats-container {
+        gap: 0.3rem;
+    }
+
+    .booking-summary {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .summary-item {
+        font-size: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .summary-item.total {
+        font-size: 1.2rem;
+    }
+
     .time-slots {
         grid-template-columns: 1fr;
+    }
+
+    .popup-content {
+        padding: 2rem;
+    }
+
+    .popup-content h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .seat-selection-section {
+        padding: 70px 0 20px;
+    }
+
+    .container {
+        padding: 0 0.5rem;
+    }
+
+    .booking-header {
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+    }
+
+    .booking-poster {
+        width: 70px;
+        height: 98px;
+    }
+
+    .booking-details h1 {
+        font-size: 1.1rem;
+    }
+
+    .booking-details p {
+        font-size: 0.8rem;
+    }
+
+    .selection-bar {
+        padding: 1rem;
+        gap: 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    .selection-item label {
+        font-size: 0.75rem;
+    }
+
+    .ticket-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+
+    .ticket-count {
+        font-size: 1.2rem;
+        min-width: 35px;
+    }
+
+    .showtime-display {
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .seat-selection-container {
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+    }
+
+    .seat-class-section {
+        margin: 1rem 0;
+    }
+
+    .seat-class-title {
+        font-size: 0.9rem;
+        padding: 0.6rem;
+        letter-spacing: 0.5px;
+    }
+
+    .screen {
+        padding: 0.4rem 1.5rem;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+
+    .screen-container {
+        margin: 1rem 0;
+    }
+
+    .seats-wrapper {
+        margin: 1rem 0;
+    }
+
+    .seat {
+        width: 24px;
+        height: 24px;
+        font-size: 0.55rem;
+        border-radius: 4px;
+        border-width: 1.5px;
+    }
+
+    .row-label {
+        width: 18px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .aisle-gap {
+        width: 15px;
+        height: 24px;
+    }
+
+    .seat-row {
+        gap: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .seats-container {
+        gap: 0.25rem;
+    }
+
+    .booking-summary {
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .summary-content {
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-item {
+        font-size: 0.9rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .summary-item.total {
+        font-size: 1.1rem;
+    }
+
+    .btn-large {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+
+    .popup-content {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    .popup-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .popup-content p {
+        font-size: 0.95rem;
+    }
+
+    .time-slot-btn {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .seat {
+        width: 20px;
+        height: 20px;
+        font-size: 0.5rem;
+    }
+
+    .row-label {
+        width: 16px;
+        height: 20px;
+        font-size: 0.65rem;
+    }
+
+    .aisle-gap {
+        width: 12px;
+        height: 20px;
+    }
+
+    .seat-row {
+        gap: 0.2rem;
     }
 }
