@@ -227,23 +227,43 @@ def theatre_dashboard():
         ]
     }))
     
-    # Enrich showtimes with movie and screen data
+    # Enrich showtimes with movie and screen data, plus booking stats
     shows = []
+    total_revenue = 0
+    
     for showtime in all_showtimes:
         movie = theatre_bp.mongo.db.movies.find_one({'_id': ObjectId(showtime['movie_id'])})
         screen = theatre_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+        
         if movie and screen:
+            showtime_id = str(showtime['_id'])
+            
+            # Calculate bookings and revenue for this showtime
+            bookings = list(theatre_bp.mongo.db.bookings.find({
+                'showtime_id': showtime_id,
+                'status': 'confirmed'
+            }))
+            
+            show_revenue = sum([booking.get('total_amount', 0) for booking in bookings])
+            total_booked_seats = sum([booking.get('total_seats', 0) for booking in bookings])
+            
+            total_revenue += show_revenue
+            
             show = {
-                'showtime_id': str(showtime['_id']),
+                'showtime_id': showtime_id,
                 'movie_title': movie.get('title', 'Unknown'),
                 'movie_poster': movie.get('poster_url', ''),
                 'movie_duration': movie.get('duration', 0),
                 'screen_name': screen.get('name', 'Unknown'),
+                'screen_capacity': screen.get('seating_capacity', 0),
                 'show_date': showtime.get('show_date', ''),
                 'show_time': showtime.get('show_time', ''),
                 'ticket_price': showtime.get('ticket_price', 0),
                 'vip_price': showtime.get('vip_price', 0),
-                'available_seats': showtime.get('available_seats', 0)
+                'available_seats': showtime.get('available_seats', 0),
+                'show_revenue': show_revenue,
+                'total_booked_seats': total_booked_seats,
+                'total_bookings': len(bookings)
             }
             shows.append(show)
 
@@ -276,4 +296,5 @@ def theatre_dashboard():
                          total_shows=total_shows,
                          total_screens=total_screens,
                          total_movies=total_movies,
-                         total_bookings=booking_count)
+                         total_bookings=booking_count,
+                         total_revenue=total_revenue)

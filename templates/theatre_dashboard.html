@@ -123,13 +123,6 @@
             <!-- Statistics Cards -->
             <div class="dashboard-stats">
                 <div class="stat-card">
-                    <div class="stat-icon">🎥</div>
-                    <div class="stat-info">
-                        <h4>Total Movies</h4>
-                        <p class="stat-number">{{ total_movies }}</p>
-                    </div>
-                </div>
-                <div class="stat-card">
                     <div class="stat-icon">🎬</div>
                     <div class="stat-info">
                         <h4>Active Shows</h4>
@@ -144,10 +137,10 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">📺</div>
+                    <div class="stat-icon">💰</div>
                     <div class="stat-info">
-                        <h4>Screens</h4>
-                        <p class="stat-number">{{ total_screens }}</p>
+                        <h4>Total Revenue</h4>
+                        <p class="stat-number">₹{{ "{:,.0f}".format(total_revenue) }}</p>
                     </div>
                 </div>
             </div>
@@ -167,11 +160,9 @@
                                         <th>Poster</th>
                                         <th>Movie</th>
                                         <th>Screen</th>
-                                        <th>Date</th>
-                                        <th>Time</th>
+                                        <th>Show Details</th>
                                         <th>Duration</th>
                                         <th>Prices</th>
-                                        <th>Available Seats</th>
                                         <th style="color: #d9534f;">Delete</th>
                                     </tr>
                                 </thead>
@@ -182,14 +173,21 @@
                                     {% endfor %}
                                     {% for date, shows in grouped_shows.items() %}
                                         <tr>
-                                            <td colspan="10" style="border-top: 4px solid #FFD600; background: #fffde7; text-align:center; font-weight:bold; font-size: 1.1em; letter-spacing: 1px; padding: 0.7em 0; color: #b8860b;">
+                                            <td colspan="7" style="border-top: 4px solid #FFD600; background: #fffde7; text-align:center; font-weight:bold; font-size: 1.1em; letter-spacing: 1px; padding: 0.7em 0; color: #b8860b;">
                                                 <span style="display:inline-block; border-radius: 2em; background: #ffe066; padding: 0.2em 1.5em; border: 1.5px solid #FFD600; box-shadow: 0 1px 4px #ffe06655;">
                                                     Shows for {{ date|format_date }}
                                                 </span>
                                             </td>
                                         </tr>
                                         {% for show in shows %}
-                                            <tr>
+                                            <tr class="show-row" 
+                                                data-revenue="{{ show.show_revenue }}"
+                                                data-booked-seats="{{ show.total_booked_seats }}"
+                                                data-total-bookings="{{ show.total_bookings }}"
+                                                data-capacity="{{ show.screen_capacity }}"
+                                                data-movie="{{ show.movie_title }}"
+                                                data-date="{{ show.show_date|format_date }}"
+                                                data-time="{{ show.show_time|format_time }}">
                                                 <td>
                                                     <img src="{{ show.movie_poster }}" alt="{{ show.movie_title }}" class="movie-thumbnail">
                                                 </td>
@@ -197,17 +195,13 @@
                                                     <strong>{{ show.movie_title }}</strong>
                                                 </td>
                                                 <td><span class="badge" style="white-space:nowrap;">{{ show.screen_name }}</span></td>
-                                                <td>{{ show.show_date|format_date }}</td>
-                                                <td><strong>{{ show.show_time|format_time }}</strong></td>
-                                                <td>{{ show.movie_duration }} min</td>
-                                                <td>
-                                                    Normal: <strong>₹{{ show.ticket_price }}</strong><br>
-                                                    VIP: <strong>₹{{ show.vip_price }}</strong>
+                                                <td style="white-space: nowrap;">
+                                                    <strong>{{ show.show_date|format_date }}</strong> | <strong>{{ show.show_time|format_time }}</strong> | 
+                                                    <span class="badge" style="background: var(--primary-yellow); color: var(--dark-navy);">{{ show.available_seats }} seats</span>
                                                 </td>
-                                                <td>
-                                                    <span class="badge" style="background: var(--primary-yellow); color: var(--dark-navy);">
-                                                        {{ show.available_seats }} seats
-                                                    </span>
+                                                <td>{{ show.movie_duration }} min</td>
+                                                <td style="white-space: nowrap;">
+                                                    Normal: <strong>₹{{ show.ticket_price }}</strong> | VIP: <strong>₹{{ show.vip_price }}</strong>
                                                 </td>
                                                 <td>
                                                     <button class="btn btn-danger btn-sm" style="background-color: #d9534f; border-color: #d43f3a; color: #fff;" onclick="deleteShowtime('{{ show.showtime_id }}', '{{ show.movie_title }}')">

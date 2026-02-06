@@ -62,17 +62,28 @@ def index():
 
         movies.append(movie)
 
-    # Limit to 3 movies for home page display
-    # Sort by release_date (oldest first). Movies without a valid release_date go last.
-    def _release_key(m):
+    # Sort movies: 1) Latest first (today/tomorrow/upcoming shows), 2) Released movies, 3) Future releases
+    def get_movie_sort_key(m):
         rd = m.get('release_date')
         try:
-            from datetime import datetime as _dt
-            return _dt.strptime(rd, '%Y-%m-%d').date() if rd else _dt.max.date()
+            release_date = datetime.strptime(rd, '%Y-%m-%d').date() if rd else datetime.max.date()
         except Exception:
-            return _dt.max.date()
-
-    movies.sort(key=_release_key)
+            release_date = datetime.max.date()
+        
+        today = datetime.now().date()
+        days_diff = (release_date - today).days
+        
+        # Category 1: Movies with shows in next 3 days (priority: 0-2)
+        if 0 <= days_diff <= 2:
+            return (0, days_diff, release_date)  # Latest first (today=0, tomorrow=1, day after=2)
+        # Category 2: Already released movies (priority: 1)
+        elif days_diff < 0:
+            return (1, -days_diff, release_date)  # Most recent releases first
+        # Category 3: Future releases (priority: 2)
+        else:
+            return (2, days_diff, release_date)  # Nearest future releases first
+    
+    movies.sort(key=get_movie_sort_key)
     movies = movies[:3]
     
     # Get user data if logged in
@@ -166,16 +177,29 @@ def all_movies():
         movie['has_show'] = future_showtimes_count > 0
 
         movies.append(movie)
-    # Sort full movies list by release_date (oldest first). Missing/invalid dates go last.
-    def _release_key2(m):
+    
+    # Sort movies: 1) Latest first (today/tomorrow/upcoming shows), 2) Released movies, 3) Future releases
+    def get_movie_sort_key(m):
         rd = m.get('release_date')
         try:
-            from datetime import datetime as _dt
-            return _dt.strptime(rd, '%Y-%m-%d').date() if rd else _dt.max.date()
+            release_date = datetime.strptime(rd, '%Y-%m-%d').date() if rd else datetime.max.date()
         except Exception:
-            return _dt.max.date()
-
-    movies.sort(key=_release_key2)
+            release_date = datetime.max.date()
+        
+        today = datetime.now().date()
+        days_diff = (release_date - today).days
+        
+        # Category 1: Movies with shows in next 3 days (priority: 0-2)
+        if 0 <= days_diff <= 2:
+            return (0, days_diff, release_date)  # Latest first (today=0, tomorrow=1, day after=2)
+        # Category 2: Already released movies (priority: 1)
+        elif days_diff < 0:
+            return (1, -days_diff, release_date)  # Most recent releases first
+        # Category 3: Future releases (priority: 2)
+        else:
+            return (2, days_diff, release_date)  # Nearest future releases first
+    
+    movies.sort(key=get_movie_sort_key)
     # If a search was performed but returned no matches, prepare suggestions
     suggestions = []
     no_results = False
