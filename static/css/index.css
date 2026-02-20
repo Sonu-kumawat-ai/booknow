@@ -26,6 +26,37 @@
     opacity: 0.9;
 }
 
+/* Movie Status Tabs */
+.movie-tabs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0 0 0;
+    gap: 0.5rem;
+}
+
+.movie-tab {
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.movie-tab:not(.active):hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.movie-tab.active {
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    box-shadow: 0 4px 12px rgba(251, 197, 49, 0.3);
+}
+
 
 .hero-rotator {
     width: 100%;

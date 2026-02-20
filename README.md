@@ -6,7 +6,9 @@ A comprehensive movie ticket booking web application built with Flask, MongoDB, 
 
 ### For Users
 - 🔐 **User Authentication** - Registration with OTP verification, Login, and Google OAuth integration
-- 🎥 **Movie Browsing** - Browse current and upcoming movies with detailed information
+- 🎥 **Movie Browsing** - Browse movies in two categories:
+  - **🎬 In Theatres** - Movies currently available for booking
+  - **🔜 Coming Soon** - Upcoming movie releases with release dates
 - 💺 **Interactive Seat Selection** - Visual seat map with Normal (80%) and VIP (20%) sections
 - 🎟️ **Online Booking** - Real-time seat availability and instant booking confirmation
 - 💳 **Razorpay Payment Integration** - Secure payment processing
@@ -15,7 +17,8 @@ A comprehensive movie ticket booking web application built with Flask, MongoDB, 
 
 ### For Theatre Owners
 - 🏢 **Theatre Registration** - Apply to become a theatre owner with detailed information
-- 🎬 **Movie Management** - Add movies with multiple showtimes across different screens
+- 🎬 **Movie Management** - Add showtimes to movies with "in theatre" status
+  - Cannot add showtimes to upcoming movies (releases in >7 days)
 - 📊 **Dashboard** - View all upcoming shows, screens, and booking statistics
 - ⏰ **Smart Scheduling** - Automatic conflict detection prevents overlapping shows
 - 💰 **Dynamic Pricing** - Set different prices for Normal and VIP seats per showtime
@@ -23,8 +26,10 @@ A comprehensive movie ticket booking web application built with Flask, MongoDB, 
 
 ### For Admins
 - 🛡️ **Admin Panel** - Manage theatre owner applications and approvals
-- 🎭 **System-Wide Management** - Add movies to any theatre
-- 📈 **Analytics** - View platform statistics and bookings
+- 🎭 **Movie Management** - Add movies as "upcoming" or "in theatre" based on release date
+  - Movies with release dates >7 days away are automatically marked as "upcoming"
+  - Movies automatically switch to "in theatre" status 7 days before release
+- 📈 **Analytics** - View platform statistics including theatre/upcoming movie counts
 
 ## 🛠️ Technologies Used
 

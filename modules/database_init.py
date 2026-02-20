@@ -29,6 +29,7 @@ def initialize_database(mongo):
     db.movies.create_index('title')
     db.movies.create_index('genre')
     db.movies.create_index('release_date')
+    db.movies.create_index('status')  # Index for movie status (upcoming/theatre)
     
     # Showtimes collection
     db.showtimes.create_index('movie_id')
@@ -58,6 +59,14 @@ def initialize_database(mongo):
     db.theatre_owner_applications.create_index('user_id')
     db.theatre_owner_applications.create_index('status')
     db.theatre_owner_applications.create_index('applied_date')
+    
+    # Offers collection
+    db.offers.create_index('code', unique=True)
+    db.offers.create_index('status')
+    db.offers.create_index('valid_from')
+    db.offers.create_index('valid_until')
+    db.offers.create_index('created_by')
+    db.offers.create_index('applicable_to')
     
     print("✅ Database collections and indexes created successfully!")
 
@@ -242,3 +251,81 @@ def migrate_existing_data(mongo):
 if __name__ == '__main__':
     print("This script should be run from the main application")
     print("Import and call initialize_database(mongo) and migrate_existing_data(mongo)")
+
+
+def update_movie_status(mongo):
+    """
+    Auto-update movie status from 'upcoming' to 'theatre' when release date is within 7 days
+    This should be called periodically (e.g., daily or on each request)
+    """
+    from datetime import datetime, timedelta
+    
+    db = mongo.db
+    current_date = datetime.now().date()
+    target_date = current_date + timedelta(days=7)
+    
+    # Find upcoming movies whose release date is within 7 days or has passed
+    upcoming_movies = db.movies.find({
+        'status': 'upcoming',
+        'release_date': {'$lte': target_date.strftime('%Y-%m-%d')}
+    })
+    
+    updated_count = 0
+    for movie in upcoming_movies:
+        try:
+            release_date_str = movie.get('release_date', '')
+            if release_date_str:
+                release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                # Check if release date is within 7 days or has already passed
+                if release_date <= target_date:
+                    db.movies.update_one(
+                        {'_id': movie['_id']},
+                        {'$set': {'status': 'theatre'}}
+                    )
+                    updated_count += 1
+        except Exception as e:
+            print(f"Error updating movie {movie.get('title', 'Unknown')}: {str(e)}")
+            continue
+    
+    return updated_count
+
+
+def migrate_existing_movies_status(mongo):
+    """
+    Migrate existing movies to add status field based on release date
+    """
+    from datetime import datetime, timedelta
+    
+    db = mongo.db
+    current_date = datetime.now().date()
+    target_date = current_date + timedelta(days=7)
+    
+    # Update all movies without status field
+    movies_without_status = db.movies.find({'status': {'$exists': False}})
+    
+    for movie in movies_without_status:
+        try:
+            release_date_str = movie.get('release_date', '')
+            if release_date_str:
+                release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                # If release date is more than 7 days away, set as upcoming
+                if release_date > target_date:
+                    status = 'upcoming'
+                else:
+                    status = 'theatre'
+            else:
+                # If no release date, assume it's already in theatres
+                status = 'theatre'
+            
+            db.movies.update_one(
+                {'_id': movie['_id']},
+                {'$set': {'status': status}}
+            )
+        except Exception as e:
+            # If error parsing date, default to theatre
+            db.movies.update_one(
+                {'_id': movie['_id']},
+                {'$set': {'status': 'theatre'}}
+            )
+    
+    print("✅ Movies status migration completed!")

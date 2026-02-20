@@ -158,6 +158,159 @@
             opacity: 0.5;
             font-style: italic;
         }
+
+        /* Offer Section */
+        .offer-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .offer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .offer-header h4 {
+            margin: 0;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+
+        .offer-toggle {
+            color: var(--primary-red);
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .offer-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .offer-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+        }
+
+        .apply-btn {
+            padding: 10px 20px;
+            background: var(--primary-yellow);
+            color: var(--text-dark);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .apply-btn:hover {
+            background: #e0ae2e;
+        }
+
+        .offer-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .offer-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .offer-item:hover {
+            border-color: var(--primary-red);
+            box-shadow: 0 2px 8px rgba(230, 57, 70, 0.1);
+        }
+
+        .offer-item.selected {
+            border-color: var(--primary-red);
+            background: #fff5f5;
+        }
+
+        .offer-code {
+            font-weight: 600;
+            color: var(--primary-red);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .offer-description {
+            font-size: 13px;
+            color: var(--text-dark);
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .offer-discount {
+            font-size: 13px;
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .applied-offer {
+            padding: 12px;
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+        }
+
+        .applied-offer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-offer-btn {
+            background: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+        }
+
+        .offer-message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+        }
+
+        .offer-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .offer-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .payment-row.discount {
+            color: #28a745;
+        }
+
+        .payment-row.discount span {
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -213,14 +366,46 @@
                 <span>Convenience Fee <span class="fee-note">(18% GST included)</span>:</span>
                 <span>₹{{ convenience_fee }}</span>
             </div>
+            
+            <!-- Offers Section -->
+            <div class="offer-section">
+                <div class="offer-header">
+                    <h4>🎁 Apply Offers</h4>
+                    <span class="offer-toggle" id="viewOffersBtn">View All Offers</span>
+                </div>
+                
+                <div id="appliedOfferContainer" style="display: none;">
+                    <!-- Applied offer will be shown here -->
+                </div>
+                
+                <div class="offer-input-container">
+                    <input type="text" id="offerCodeInput" class="offer-input" placeholder="Enter offer code" />
+                    <button class="apply-btn" id="applyOfferBtn">Apply</button>
+                </div>
+                
+                <div id="offerMessage"></div>
+                
+                <div id="offerListContainer" style="display: none;">
+                    <h5 style="margin: 15px 0 10px; font-size: 14px;">Available Offers:</h5>
+                    <div class="offer-list" id="offerList">
+                        <p style="text-align: center; color: #666;">Loading offers...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="discountRow" class="payment-row discount" style="display: none;">
+                <span>Discount:</span>
+                <span id="discountAmount">- ₹0</span>
+            </div>
+            
             <div class="payment-row total">
                 <span>Total Amount:</span>
-                <span>₹{{ total_amount }}</span>
+                <span id="finalAmount">₹{{ total_amount }}</span>
             </div>
         </div>
 
         <button class="pay-button" id="payButton">
-            💳 Pay ₹{{ total_amount }}
+            💳 Pay <span id="payButtonAmount">₹{{ total_amount }}</span>
         </button>
 
         <a href="{{ url_for('booking.book_seats', showtime_id=showtime._id) }}" class="back-link">
@@ -248,17 +433,196 @@
         // Load payment data
         const paymentDataElement = document.getElementById('payment-data');
         const paymentData = paymentDataElement ? JSON.parse(paymentDataElement.textContent) : {};
+        
+        // Offer management variables
+        let availableOffers = [];
+        let appliedOffer = null;
+        let discount = 0;
+        let originalAmount = paymentData.totalAmount;
+        let finalAmount = originalAmount;
 
-        // Setup event listener for pay button
+        // Setup event listeners
         document.addEventListener('DOMContentLoaded', function() {
             const payButton = document.getElementById('payButton');
             if (payButton) {
                 payButton.addEventListener('click', initiatePayment);
             }
+            
+            // Offer management listeners
+            document.getElementById('viewOffersBtn').addEventListener('click', toggleOfferList);
+            document.getElementById('applyOfferBtn').addEventListener('click', applyOfferCode);
+            
+            // Load available offers
+            loadAvailableOffers();
         });
+        
+        function toggleOfferList() {
+            const container = document.getElementById('offerListContainer');
+            const btn = document.getElementById('viewOffersBtn');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.textContent = 'Hide Offers';
+                if (availableOffers.length === 0) {
+                    loadAvailableOffers();
+                }
+            } else {
+                container.style.display = 'none';
+                btn.textContent = 'View All Offers';
+            }
+        }
+        
+        function loadAvailableOffers() {
+            fetch('/get-applicable-offers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    showtime_id: paymentData.showtimeId,
+                    amount: originalAmount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    availableOffers = data.offers;
+                    displayOfferList();
+                } else {
+                    document.getElementById('offerList').innerHTML = '<p style="text-align: center; color: #666;">No offers available</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading offers:', error);
+                document.getElementById('offerList').innerHTML = '<p style="text-align: center; color: #dc3545;">Failed to load offers</p>';
+            });
+        }
+        
+        function displayOfferList() {
+            const offerList = document.getElementById('offerList');
+            if (availableOffers.length === 0) {
+                offerList.innerHTML = '<p style="text-align: center; color: #666;">No offers available for this booking</p>';
+                return;
+            }
+            
+            offerList.innerHTML = availableOffers.map(offer => `
+                <div class="offer-item" onclick="selectOffer('${offer.code}')">
+                    <div class="offer-code">${offer.code}</div>
+                    <div class="offer-description">${offer.description}</div>
+                    <div class="offer-discount">
+                        Save ₹${offer.calculated_discount} | 
+                        ${offer.discount_type === 'percentage' ? offer.discount_value + '% OFF' : '₹' + offer.discount_value + ' OFF'}
+                        ${offer.min_purchase > 0 ? ' (Min: ₹' + offer.min_purchase + ')' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectOffer(code) {
+            document.getElementById('offerCodeInput').value = code;
+            applyOfferCode();
+        }
+        
+        function applyOfferCode() {
+            const code = document.getElementById('offerCodeInput').value.trim();
+            if (!code) {
+                showMessage('Please enter an offer code', 'error');
+                return;
+            }
+            
+            fetch('/validate-offer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: code,
+                    showtime_id: paymentData.showtimeId,
+                    amount: originalAmount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    appliedOffer = data.offer;
+                    discount = data.discount;
+                    finalAmount = data.final_amount;
+                    updatePaymentSummary();
+                    showAppliedOffer();
+                    showMessage('Offer applied successfully!', 'success');
+                    // Hide offer list after applying
+                    document.getElementById('offerListContainer').style.display = 'none';
+                    document.getElementById('viewOffersBtn').textContent = 'View All Offers';
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating offer:', error);
+                showMessage('Failed to apply offer. Please try again.', 'error');
+            });
+        }
+        
+        function removeOffer() {
+            appliedOffer = null;
+            discount = 0;
+            finalAmount = originalAmount;
+            updatePaymentSummary();
+            document.getElementById('appliedOfferContainer').style.display = 'none';
+            document.getElementById('offerCodeInput').value = '';
+            showMessage('Offer removed', 'success');
+        }
+        
+        function showAppliedOffer() {
+            const container = document.getElementById('appliedOfferContainer');
+            container.innerHTML = `
+                <div class="applied-offer">
+                    <div class="applied-offer-header">
+                        <div>
+                            <strong>${appliedOffer.code}</strong> applied!
+                            <div style="font-size: 12px; color: #155724; margin-top: 3px;">
+                                You saved ₹${discount}
+                            </div>
+                        </div>
+                        <button class="remove-offer-btn" onclick="removeOffer()">Remove</button>
+                    </div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+        
+        function updatePaymentSummary() {
+            const discountRow = document.getElementById('discountRow');
+            const discountAmount = document.getElementById('discountAmount');
+            const finalAmountEl = document.getElementById('finalAmount');
+            const payButtonAmount = document.getElementById('payButtonAmount');
+            
+            if (discount > 0) {
+                discountRow.style.display = 'flex';
+                discountAmount.textContent = `- ₹${discount}`;
+            } else {
+                discountRow.style.display = 'none';
+            }
+            
+            finalAmountEl.textContent = `₹${finalAmount}`;
+            payButtonAmount.textContent = `₹${finalAmount}`;
+            
+            // Update payment data
+            paymentData.totalAmount = finalAmount;
+            paymentData.discount = discount;
+            paymentData.appliedOfferCode = appliedOffer ? appliedOffer.code : null;
+            paymentData.appliedOfferId = appliedOffer ? appliedOffer._id : null;
+        }
+        
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('offerMessage');
+            messageDiv.innerHTML = `<div class="offer-message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
 
         function initiatePayment() {
-            // Create order via API
+            // Create order via API with discount info
             fetch('/create-order', {
                 method: 'POST',
                 headers: {
@@ -267,7 +631,10 @@
                 body: JSON.stringify({
                     amount: paymentData.totalAmount,
                     showtime_id: paymentData.showtimeId,
-                    seats: paymentData.seats
+                    seats: paymentData.seats,
+                    offer_code: paymentData.appliedOfferCode,
+                    discount: paymentData.discount,
+                    original_amount: originalAmount
                 })
             })
             .then(response => response.json())

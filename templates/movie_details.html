@@ -169,7 +169,13 @@
 
                     <!-- Reviews Section (moved below theatres) -->
 
-                    {% if theatres and theatres|length > 0 %}
+                    {% if movie.status == 'upcoming' %}
+                    <div class="upcoming-movie-notice" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; margin: 2rem 0; color: white; text-align: center;">
+                        <h3 style="margin-bottom: 0.5rem;">🔜 Coming Soon</h3>
+                        <p style="font-size: 1.2rem; margin: 0;">Releases on <strong>{{ movie.release_date }}</strong></p>
+                        <p style="margin-top: 1rem; opacity: 0.9;">Showtimes will be available 7 days before release date</p>
+                    </div>
+                    {% elif theatres and theatres|length > 0 %}
                     <div class="showtimes-section">
                         <h3>Available in These Theatres</h3>
                         <div class="showtimes-grid">

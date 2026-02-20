@@ -295,6 +295,9 @@ def create_order():
         amount = int(data['amount']) * 100  # Convert to paise
         showtime_id = data['showtime_id']
         seats = data['seats']
+        offer_code = data.get('offer_code')
+        discount = data.get('discount', 0)
+        original_amount = data.get('original_amount', data['amount'])
         
         # Create Razorpay order
         order_data = {
@@ -311,7 +314,10 @@ def create_order():
             'showtime_id': showtime_id,
             'seats': seats,
             'amount': amount // 100,
-            'order_id': razorpay_order['id']
+            'order_id': razorpay_order['id'],
+            'offer_code': offer_code,
+            'discount': discount,
+            'original_amount': original_amount
         }
         
         return jsonify({
@@ -372,11 +378,24 @@ def verify_payment():
             'showtime_id': showtime_id,
             'total_seats': len(seats),
             'total_amount': booking_data['amount'],
+            'original_amount': booking_data.get('original_amount', booking_data['amount']),
+            'discount': booking_data.get('discount', 0),
+            'offer_code': booking_data.get('offer_code'),
             'booking_date': datetime.utcnow(),
             'status': 'confirmed'
         }
         
         booking_id = booking_bp.mongo.db.bookings.insert_one(booking).inserted_id
+        
+        # Update offer usage count if offer was applied
+        if booking_data.get('offer_code'):
+            try:
+                booking_bp.mongo.db.offers.update_one(
+                    {'code': booking_data['offer_code']},
+                    {'$inc': {'usage_count': 1}}
+                )
+            except Exception:
+                pass  # Don't fail booking if offer update fails
         
         # Create individual seat records
         screen = booking_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
@@ -436,7 +455,9 @@ def verify_payment():
                     'show_time': showtime.get('show_time', 'N/A'),
                     'seats': ', '.join([str(s) for s in seats]),
                     'total_tickets': len(seats),
-                    'total_amount': booking_data['amount']
+                    'total_amount': booking_data['amount'],
+                    'discount': booking_data.get('discount', 0),
+                    'offer_code': booking_data.get('offer_code')
                 }
                 send_booking_confirmation_email(user['email'], user.get('username', 'User'), booking_details)
         except Exception as e:

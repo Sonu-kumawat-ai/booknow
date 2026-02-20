@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Offer - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/add_offer.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{{ url_for('main.index') }}">
+                    <h1>Book<span>Now</span></h1>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('main.all_movies') }}">Movies</a></li>
+                <li><a href="#" class="active">Add Offer</a></li>
+            </ul>
+            <div class="nav-auth">
+                <div class="profile-dropdown">
+                    <button class="profile-icon" id="profileToggle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="8" r="3"></circle>
+                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="profileMenu">
+                        <a href="{{ url_for('user.profile') }}" class="dropdown-item">
+                            <span class="dropdown-icon">👤</span>
+                            My Profile
+                        </a>
+                        <a href="{{ url_for('user.settings') }}" class="dropdown-item">
+                            <span class="dropdown-icon">⚙️</span>
+                            Settings
+                        </a>
+                        {% if user_data and (user_data.role == 'theatre_owner' or user_data.role == 'admin') %}
+                            <div class="dropdown-divider"></div>
+                            {% if user_data.role == 'theatre_owner' %}
+                                <a href="{{ url_for('theatre.theatre_dashboard') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">📊</span>
+                                    Theatre Dashboard
+                                </a>
+                            {% endif %}
+                            {% if user_data.role == 'admin' %}
+                                <a href="{{ url_for('admin.admin') }}" class="dropdown-item">
+                                    <span class="dropdown-icon">🎯</span>
+                                    Admin Panel
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🚪</span>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <div class="page-header">
+            <h2>🎁 Create New Offer</h2>
+            <p class="subtitle">
+                {% if user_data.role == 'admin' %}
+                    Create promotional offers for all theatres and movies
+                {% else %}
+                    Create promotional offers for your theatre and movies
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="form-container">
+            <form id="addOfferForm">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="offerCode">Offer Code <span class="required">*</span></label>
+                        <input type="text" id="offerCode" name="code" required 
+                               placeholder="e.g., SUMMER25, WEEKEND50" 
+                               style="text-transform: uppercase;"
+                               maxlength="20">
+                        <small class="form-hint">Unique code that users will enter at checkout</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="offerDescription">Description <span class="required">*</span></label>
+                        <textarea id="offerDescription" name="description" required 
+                                  placeholder="Describe the offer (e.g., Get 25% off on weekend bookings)"
+                                  rows="3"
+                                  maxlength="500"></textarea>
+                        <small class="form-hint">This will be shown to users</small>
+                    </div>
+                </div>
+
+                <!-- Discount Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Discount Details</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="discountType">Discount Type <span class="required">*</span></label>
+                            <select id="discountType" name="discount_type" required onchange="toggleMaxDiscount()">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount (₹)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="discountValue">Discount Value <span class="required">*</span></label>
+                            <input type="number" id="discountValue" name="discount_value" required 
+                                   min="1" step="0.01" placeholder="20">
+                            <small class="form-hint" id="discountHint">Enter percentage value (e.g., 20 for 20%)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="minPurchase">Minimum Purchase (₹)</label>
+                            <input type="number" id="minPurchase" name="min_purchase" 
+                                   value="0" min="0" step="0.01" placeholder="0">
+                            <small class="form-hint">Minimum booking amount required (0 = no minimum)</small>
+                        </div>
+                        
+                        <div class="form-group" id="maxDiscountGroup">
+                            <label for="maxDiscount">Maximum Discount (₹)</label>
+                            <input type="number" id="maxDiscount" name="max_discount" 
+                                   value="0" min="0" step="0.01" placeholder="0">
+                            <small class="form-hint">Maximum discount amount (0 = no limit)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validity Period -->
+                <div class="form-section">
+                    <h3 class="section-title">Validity Period</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="validFrom">Valid From <span class="required">*</span></label>
+                            <input type="date" id="validFrom" name="valid_from" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="validUntil">Valid Until <span class="required">*</span></label>
+                            <input type="date" id="validUntil" name="valid_until" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="max-width: 48%;">
+                        <label for="usageLimit">Usage Limit</label>
+                        <input type="number" id="usageLimit" name="usage_limit" 
+                               value="0" min="0" placeholder="0">
+                        <small class="form-hint">Maximum number of times this offer can be used (0 = unlimited)</small>
+                    </div>
+                </div>
+
+                <!-- Applicability -->
+                <div class="form-section">
+                    <h3 class="section-title">Offer Applicability</h3>
+                    
+                    <div class="form-group">
+                        <label for="applicableTo">Applicable To <span class="required">*</span></label>
+                        <select id="applicableTo" name="applicable_to" required onchange="toggleApplicableFields()">
+                            {% if user_data.role == 'admin' %}
+                                <option value="all">All Theatres and Movies</option>
+                                <option value="theatres">Specific Theatres</option>
+                                <option value="movies">Specific Movies</option>
+                                <option value="theatre_movies">Specific Theatre's Movies</option>
+                            {% else %}
+                                <option value="theatre">All Movies in My Theatre</option>
+                                <option value="movies">Specific Movies in My Theatre</option>
+                            {% endif %}
+                        </select>
+                        <small class="form-hint">
+                            {% if user_data.role == 'admin' %}
+                                Choose where this offer can be applied
+                            {% else %}
+                                Your offers apply only to your theatre
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    {% if user_data.role == 'admin' %}
+                    <div class="form-group" id="theatreSelectGroup" style="display: none;">
+                        <label for="theatreSelect">Select Theatres <span class="required">*</span></label>
+                        <div class="multi-select-container">
+                            <div class="multi-select-wrapper" id="theatreSelectWrapper" onclick="toggleTheatreDropdown()">
+                                <div class="selected-items" id="selectedTheatres"></div>
+                                <div class="multi-select-placeholder" id="theatrePlaceholder">Click to select theatres...</div>
+                            </div>
+                            <div class="multi-select-dropdown" id="theatreDropdown">
+                                {% for theatre in theatres %}
+                                    <div class="multi-select-option" data-id="{{ theatre._id }}" data-name="{{ theatre.name }} - {{ theatre.location }}" onclick="toggleTheatreSelection(event, '{{ theatre._id }}', '{{ theatre.name }} - {{ theatre.location }}')">
+                                        <input type="checkbox" id="theatre_{{ theatre._id }}" onclick="event.stopPropagation();">
+                                        <label for="theatre_{{ theatre._id }}" onclick="event.preventDefault();">{{ theatre.name }} - {{ theatre.location }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedTheatreIds" name="theatre_ids" value="">
+                    </div>
+                    
+                    <!-- For theatre-specific movies -->
+                    <div class="form-group" id="theatreFilterGroup" style="display: none;">
+                        <label for="theatreFilter">Select Theatre <span class="required">*</span></label>
+                        <select id="theatreFilter" name="theatre_id" onchange="loadMoviesForTheatre()">
+                            <option value="">Select a theatre first...</option>
+                            {% for theatre in theatres %}
+                                <option value="{{ theatre._id }}">{{ theatre.name }} - {{ theatre.location }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-hint">Select a theatre to see its movies</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group" id="movieSelectGroup" style="display: none;">
+                        <label for="movieSelect">Select Movies <span class="required">*</span></label>
+                        <div class="multi-select-container">
+                            <div class="multi-select-wrapper" id="movieSelectWrapper" onclick="toggleMovieDropdown()">
+                                <div class="selected-items" id="selectedMovies"></div>
+                                <div class="multi-select-placeholder" id="moviePlaceholder">Click to select movies...</div>
+                            </div>
+                            <div class="multi-select-dropdown" id="movieDropdown">
+                                {% for movie in movies %}
+                                    <div class="multi-select-option" data-id="{{ movie._id }}" data-name="{{ movie.title }}" onclick="toggleMovieSelection(event, '{{ movie._id }}', '{{ movie.title }}')">
+                                        <input type="checkbox" id="movie_{{ movie._id }}" onclick="event.stopPropagation();">
+                                        <label for="movie_{{ movie._id }}" onclick="event.preventDefault();">{{ movie.title }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedMovieIds" name="movie_ids" value="">
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-icon">✓</span>
+                        Create Offer
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="goBack()">
+                        <span class="btn-icon">←</span>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/add_offer.js') }}"></script>
+</body>
+</html>

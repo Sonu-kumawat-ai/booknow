@@ -145,6 +145,11 @@
                                 <div class="form-group">
                                     <label for="release_date">Release Date *</label>
                                     <input type="date" id="release_date" name="release_date" required>
+                                    {% if user_data and user_data.role == 'admin' %}
+                                    <small style="color: #666; font-size: 0.85rem; display: block; margin-top: 0.3rem;">
+                                        ℹ️ Movies with release dates more than 7 days away will be marked as "Upcoming" and automatically switch to "In Theatres" 7 days before release.
+                                    </small>
+                                    {% endif %}
                                 </div>
                             </div>
 

@@ -164,6 +164,10 @@ def admin():
     total_users = admin_bp.mongo.db.users.count_documents({})
     total_bookings = admin_bp.mongo.db.bookings.count_documents({})
     
+    # Count movies by status
+    theatre_movies_count = admin_bp.mongo.db.movies.count_documents({'status': 'theatre'})
+    upcoming_movies_count = admin_bp.mongo.db.movies.count_documents({'status': 'upcoming'})
+    
     return render_template('admin.html', 
                          user=user,
                          user_data=user,
@@ -172,7 +176,9 @@ def admin():
                          all_theatres=all_theatres,
                          all_movies=all_movies,
                          total_users=total_users,
-                         total_bookings=total_bookings)
+                         total_bookings=total_bookings,
+                         theatre_movies_count=theatre_movies_count,
+                         upcoming_movies_count=upcoming_movies_count)
 
 @admin_bp.route('/admin/approve-theatre-owner/<application_id>', methods=['POST'])
 def approve_theatre_owner(application_id):

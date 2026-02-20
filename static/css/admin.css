@@ -377,6 +377,20 @@ body {
     color: var(--text-light);
 }
 
+.btn-sm.btn-yellow {
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.btn-sm.btn-yellow:hover {
+    background: #FFC645;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
 .btn-sm:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);

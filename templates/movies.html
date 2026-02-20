@@ -97,12 +97,26 @@
     <!-- Page Header -->
     <section class="page-header">
         <div class="container">
-            <h1 style="color: #ffffff;">🎬 All Movies</h1>
-            <p style="color: #ffffff;">Browse our complete collection of movies currently showing</p>
+            <h1 style="color: #ffffff;">🎬 Movies</h1>
+            <p style="color: #ffffff;">Browse our collection of movies</p>
+            
             <form method="get" action="{{ url_for('main.all_movies') }}" class="movies-search header-search">
+                <input type="hidden" name="status" value="{{ status_filter }}">
                 <input type="text" name="q" placeholder="Search movies, actors, genres..." value="{{ search_query if search_query is defined else request.args.get('q','') }}">
                 <button type="submit" class="btn btn-primary search-btn">Search</button>
             </form>
+            
+            <!-- Movie Status Tabs -->
+            <div class="movie-tabs">
+                <a href="{{ url_for('main.all_movies', status='theatre') }}" 
+                   class="movie-tab {% if status_filter == 'theatre' %}active{% endif %}">
+                    🎬 In Theatres
+                </a>
+                <a href="{{ url_for('main.all_movies', status='upcoming') }}" 
+                   class="movie-tab {% if status_filter == 'upcoming' %}active{% endif %}">
+                    🔜 Coming Soon
+                </a>
+            </div>
         </div>
     </section>
 
@@ -112,17 +126,30 @@
             {% if movies %}
             <div class="movies-grid">
                 {% for movie in movies %}
-                <div class="movie-card" style="cursor: pointer;" data-movie-url="{{ url_for('movie.movie_details', movie_id=movie._id) }}">
+                <div class="movie-card" style="cursor: pointer; position: relative;" data-movie-url="{{ url_for('movie.movie_details', movie_id=movie._id) }}">
+                    {% if status_filter == 'upcoming' %}
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--primary-color); color: white; padding: 0.4rem 0.8rem; border-radius: 5px; font-size: 0.85rem; font-weight: 600; z-index: 10;">
+                        Coming Soon
+                    </div>
+                    {% endif %}
                     <div class="movie-poster">
                         <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
                         <div class="movie-overlay">
+                            {% if status_filter == 'theatre' %}
                             <button class="btn-watch">Book Now</button>
+                            {% else %}
+                            <button class="btn-watch">View Details</button>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="movie-info">
                         <h3>{{ movie.title }}</h3>
                         <div class="movie-meta">
+                            {% if status_filter == 'theatre' %}
                             <span class="rating">⭐ {{ movie.avg_rating if movie.avg_rating is not none else movie.rating }}</span>
+                            {% else %}
+                            <span class="rating">📅 {{ movie.release_date }}</span>
+                            {% endif %}
                             <span class="genre">{{ movie.genre }}</span>
                         </div>
                     </div>
@@ -142,8 +169,13 @@
                 {% else %}
                     <div class="no-movies">
                         <div class="no-movies-icon">🎬</div>
+                        {% if status_filter == 'upcoming' %}
+                        <h3>No Upcoming Movies</h3>
+                        <p>Check back later for new movie announcements!</p>
+                        {% else %}
                         <h3>No Current Shows Available</h3>
-                        <p>Please check back later for upcoming movies</p>
+                        <p>Please check back later for movies in theatres</p>
+                        {% endif %}
                     </div>
                 {% endif %}
             {% endif %}

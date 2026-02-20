@@ -91,6 +91,23 @@ def add_movie():
             else:
                 flash(f'Movie "{title}" already exists.', 'success')
         else:
+            # Determine movie status based on release date and user role
+            movie_status = 'theatre'  # default
+            if user.get('role') == 'admin':
+                # Admin can explicitly set status or it's calculated from release date
+                release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
+                current_date = datetime.now().date()
+                days_until_release = (release_date_obj - current_date).days
+                
+                # If release date is more than 7 days away, mark as upcoming
+                if days_until_release > 7:
+                    movie_status = 'upcoming'
+                else:
+                    movie_status = 'theatre'
+            else:
+                # Theatre owners can only add movies that are releasing now
+                movie_status = 'theatre'
+            
             movie_data = {
                 'title': title,
                 'description': description,
@@ -103,12 +120,19 @@ def add_movie():
                 'genre': genre,
                 'certificate': certificate,
                 'trailer_url': trailer_url,
+                'status': movie_status,
                 'created_at': datetime.utcnow()
             }
             movie_id = movie_bp.mongo.db.movies.insert_one(movie_data).inserted_id
 
         # If the requester is a theatre owner, require and create showtimes
         if user.get('role') == 'theatre_owner':
+            # Check if the movie is in theatre status (not upcoming)
+            movie_doc = movie_bp.mongo.db.movies.find_one({'_id': movie_id})
+            if movie_doc and movie_doc.get('status') == 'upcoming':
+                flash('Cannot add showtimes for upcoming movies. Please wait until it releases.', 'error')
+                return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+            
             if not show_dates or not show_times or not screen_ids or not ticket_prices or not vip_prices:
                 flash('Please provide valid show details including screens, dates, times, and prices!', 'error')
                 return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)

@@ -17,6 +17,13 @@ def init_main(mongo):
 def index():
     """Home page route"""
     from datetime import datetime, timedelta
+    from modules.database_init import update_movie_status
+    
+    # Auto-update movie status before displaying
+    try:
+        update_movie_status(main_bp.mongo)
+    except Exception:
+        pass  # Continue even if update fails
     
     user_logged_in = 'user_id' in session
     username = session.get('username', '')
@@ -26,8 +33,8 @@ def index():
     current_date = current_datetime.strftime('%Y-%m-%d')
     current_time = current_datetime.strftime('%H:%M')
     
-    # Fetch all movies (include movies without any future showtimes)
-    all_movies = list(main_bp.mongo.db.movies.find())
+    # Fetch only theatre movies (not upcoming) for home page
+    all_movies = list(main_bp.mongo.db.movies.find({'status': 'theatre'}))
 
     movies = []
     for movie in all_movies:
@@ -97,6 +104,13 @@ def index():
 def all_movies():
     """All movies page route"""
     from datetime import datetime
+    from modules.database_init import update_movie_status
+    
+    # Auto-update movie status before displaying
+    try:
+        update_movie_status(main_bp.mongo)
+    except Exception:
+        pass  # Continue even if update fails
     
     user_logged_in = 'user_id' in session
     username = session.get('username', '')
@@ -106,8 +120,14 @@ def all_movies():
     current_date = current_datetime.strftime('%Y-%m-%d')
     current_time = current_datetime.strftime('%H:%M')
     
-    # Fetch all movies (include movies without any future showtimes)
-    all_movies_list = list(main_bp.mongo.db.movies.find())
+    # Get status filter from query parameter (default: theatre)
+    status_filter = request.args.get('status', 'theatre')
+    if status_filter not in ['theatre', 'upcoming']:
+        status_filter = 'theatre'
+    
+    # Fetch movies based on status filter
+    movie_query = {'status': status_filter} if status_filter else {}
+    all_movies_list = list(main_bp.mongo.db.movies.find(movie_query))
 
     # Handle search query (supports typo-tolerant matching)
     q = (request.args.get('q') or '').strip()
@@ -221,7 +241,7 @@ def all_movies():
     if user_logged_in:
         user_data = main_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
     
-    return render_template('movies.html', logged_in=user_logged_in, username=username, movies=movies, user_data=user_data, search_query=search_query, suggestions=suggestions, no_results=no_results)
+    return render_template('movies.html', logged_in=user_logged_in, username=username, movies=movies, user_data=user_data, search_query=search_query, suggestions=suggestions, no_results=no_results, status_filter=status_filter)
 
 
 @main_bp.route('/about')
