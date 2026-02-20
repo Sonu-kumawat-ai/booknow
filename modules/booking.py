@@ -22,8 +22,10 @@ def init_booking(mongo, razorpay_client, razorpay_key_id, mail_instance):
     return booking_bp
 
 def send_booking_confirmation_email(email, username, booking_details):
-    """Send booking confirmation email with ticket details"""
+    """Send booking confirmation email with ticket details - ONLY called after payment success"""
     try:
+        print(f"Sending booking confirmation email to {email} for booking {booking_details.get('booking_id')}")
+        
         msg = Message(
             subject='🎟️ Booking Confirmed - BookNow',
             recipients=[email]
@@ -129,9 +131,10 @@ def send_booking_confirmation_email(email, username, booking_details):
         """
         
         mail.send(msg)
+        print(f"✓ Booking confirmation email sent successfully to {email}")
         return True
     except Exception as e:
-        print(f"Error sending booking confirmation email: {str(e)}")
+        print(f"✗ Error sending booking confirmation email to {email}: {str(e)}")
         return False
 
 @booking_bp.route('/book-seats/<showtime_id>')
@@ -338,15 +341,19 @@ def verify_payment():
     try:
         data = request.get_json()
         
-        # Verify payment signature
+        # CRITICAL: Verify payment signature FIRST before any booking operations
+        # This ensures Razorpay payment was successful and not tampered with
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
             'razorpay_signature': data['razorpay_signature']
         }
         
-        # Verify signature
+        # This will throw an exception if signature verification fails
+        # No booking or email will be created if this fails
         booking_bp.razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Payment verified successfully - proceed with booking creation
         
         # Payment verified, create booking in database
         booking_data = data['booking_data']
@@ -435,33 +442,38 @@ def verify_payment():
             'payment_date': datetime.utcnow(),
             'currency': 'INR'
         }
-        booking_bp.mongo.db.payments.insert_one(payment)
+        payment_result = booking_bp.mongo.db.payments.insert_one(payment)
         
-        # Send booking confirmation email
-        try:
-            user = booking_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
-            movie = booking_bp.mongo.db.movies.find_one({'_id': ObjectId(showtime['movie_id'])})
-            theatre = booking_bp.mongo.db.theatres.find_one({'_id': ObjectId(showtime['theatre_id'])})
-            screen = booking_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
-            
-            if user and user.get('email'):
-                booking_details = {
-                    'booking_id': str(booking_id),
-                    'movie_title': movie.get('title', 'N/A') if movie else 'N/A',
-                    'theatre_name': theatre.get('name', 'N/A') if theatre else 'N/A',
-                    'location': f"{theatre.get('city', '')}, {theatre.get('state', '')}" if theatre else 'N/A',
-                    'screen_name': screen.get('name', 'N/A') if screen else 'N/A',
-                    'show_date': showtime.get('show_date', 'N/A'),
-                    'show_time': showtime.get('show_time', 'N/A'),
-                    'seats': ', '.join([str(s) for s in seats]),
-                    'total_tickets': len(seats),
-                    'total_amount': booking_data['amount'],
-                    'discount': booking_data.get('discount', 0),
-                    'offer_code': booking_data.get('offer_code')
-                }
-                send_booking_confirmation_email(user['email'], user.get('username', 'User'), booking_details)
-        except Exception as e:
-            print(f"Error sending confirmation email: {str(e)}")
+        # Send booking confirmation email ONLY after payment record is successfully created
+        # This ensures email is sent only for completed and verified payments
+        if payment_result.inserted_id:
+            try:
+                user = booking_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+                movie = booking_bp.mongo.db.movies.find_one({'_id': ObjectId(showtime['movie_id'])})
+                theatre = booking_bp.mongo.db.theatres.find_one({'_id': ObjectId(showtime['theatre_id'])})
+                screen = booking_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+                
+                if user and user.get('email'):
+                    booking_details = {
+                        'booking_id': str(booking_id),
+                        'movie_title': movie.get('title', 'N/A') if movie else 'N/A',
+                        'theatre_name': theatre.get('name', 'N/A') if theatre else 'N/A',
+                        'location': f"{theatre.get('city', '')}, {theatre.get('state', '')}" if theatre else 'N/A',
+                        'screen_name': screen.get('name', 'N/A') if screen else 'N/A',
+                        'show_date': showtime.get('show_date', 'N/A'),
+                        'show_time': showtime.get('show_time', 'N/A'),
+                        'seats': ', '.join([str(s) for s in seats]),
+                        'total_tickets': len(seats),
+                        'total_amount': booking_data['amount'],
+                        'discount': booking_data.get('discount', 0),
+                        'offer_code': booking_data.get('offer_code')
+                    }
+                    # Send email only after all validations and database operations succeed
+                    send_booking_confirmation_email(user['email'], user.get('username', 'User'), booking_details)
+                    print(f"Booking confirmation email sent to {user.get('email')} for booking {str(booking_id)}")
+            except Exception as e:
+                print(f"Error sending confirmation email: {str(e)}")
+                # Don't fail the booking if email sending fails
         
         return jsonify({
             'success': True,
@@ -469,9 +481,13 @@ def verify_payment():
             'redirect_url': url_for('booking.booking_confirmation', booking_id=str(booking_id))
         })
         
-    except razorpay.errors.SignatureVerificationError:
+    except razorpay.errors.SignatureVerificationError as e:
+        print(f"Payment signature verification FAILED: {str(e)}")
+        print(f"No booking created, no email sent")
         return jsonify({'success': False, 'error': 'Payment signature verification failed'}), 400
     except Exception as e:
+        print(f"Error during booking creation: {str(e)}")
+        print(f"No email sent due to error")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @booking_bp.route('/booking-confirmation/<booking_id>')
