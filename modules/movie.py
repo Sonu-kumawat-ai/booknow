@@ -141,13 +141,23 @@ def add_movie():
                 flash('Please provide screen and prices for all showtimes!', 'error')
                 return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
 
-            # Validate show dates are not before release date
+            # Validate show dates are not in the past and not before an upcoming movie's release
             release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
+            current_date_obj = datetime.now().date()
+            
             for show_date in show_dates:
                 show_date_obj = datetime.strptime(show_date, '%Y-%m-%d').date()
-                if show_date_obj < release_date_obj:
-                    flash(f'Show date ({show_date}) cannot be before the release date ({release_date})!', 'error')
+                
+                # Don't allow shows in the past
+                if show_date_obj < current_date_obj:
+                    flash(f'Show date ({show_date}) cannot be in the past!', 'error')
                     return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
+                
+                # Only enforce release date check for movies that haven't been released yet
+                if release_date_obj > current_date_obj:
+                    if show_date_obj < release_date_obj:
+                        flash(f'Show date ({show_date}) cannot be before the release date ({release_date})!', 'error')
+                        return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
 
             # Create showtimes for this movie
             movie_duration = int(duration)

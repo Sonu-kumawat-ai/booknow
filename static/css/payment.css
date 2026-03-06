@@ -1,0 +1,358 @@
+/* Payment Page Styles */
+
+.payment-container {
+    max-width: 600px;
+    margin: 100px auto 50px;
+    padding: 30px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--primary-red);
+    border-radius: var(--radius-md);
+}
+
+.payment-header h1 {
+    color: white;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.payment-header p {
+    color: white;
+    opacity: 0.9;
+    font-size: 16px;
+}
+
+.movie-summary {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.movie-summary img {
+    width: 80px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.movie-summary-details h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-dark);
+    font-size: 20px;
+}
+
+.movie-summary-details p {
+    margin: 5px 0;
+    color: var(--text-dark);
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.payment-details {
+    margin-bottom: 30px;
+}
+
+.payment-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 16px;
+}
+
+.payment-row:last-child {
+    border-bottom: none;
+}
+
+.payment-row span:first-child {
+    color: var(--text-dark);
+    opacity: 0.7;
+}
+
+.payment-row span:last-child {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.payment-row.seats-row span:last-child {
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.payment-row.total {
+    padding: 20px 0;
+    margin-top: 10px;
+    border-top: 2px solid var(--primary-red);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.payment-row.total span:first-child {
+    color: var(--text-dark);
+}
+
+.payment-row.total span:last-child {
+    color: var(--primary-red);
+}
+
+.pay-button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    color: var(--text-light);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 20px;
+}
+
+.pay-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+}
+
+.pay-button:active {
+    transform: translateY(0);
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-dark);
+    opacity: 0.7;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.back-link:hover {
+    color: var(--primary-red);
+    opacity: 1;
+}
+
+.fee-note {
+    font-size: 12px;
+    color: var(--text-dark);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+/* Offer Section */
+.offer-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.offer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.offer-header h4 {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 16px;
+}
+
+.offer-toggle {
+    color: var(--primary-red);
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline;
+}
+
+.offer-input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.offer-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+
+.apply-btn {
+    padding: 10px 20px;
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.apply-btn:hover {
+    background: #e0ae2e;
+}
+
+.offer-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.offer-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.offer-item:hover {
+    border-color: var(--primary-red);
+    box-shadow: 0 2px 8px rgba(230, 57, 70, 0.1);
+}
+
+.offer-item.ineligible {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+.offer-item.ineligible:hover {
+    border-color: var(--border);
+    box-shadow: none;
+}
+
+.offer-item.selected {
+    border-color: var(--primary-red);
+    background: #fff5f5;
+}
+
+.offer-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.offer-code {
+    font-weight: 600;
+    color: var(--primary-red);
+    font-size: 14px;
+}
+
+.eligible-badge {
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ineligible-badge {
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.offer-description {
+    font-size: 13px;
+    color: var(--text-dark);
+    opacity: 0.7;
+    margin-bottom: 5px;
+}
+
+.offer-discount {
+    font-size: 13px;
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.ineligible-reason {
+    color: #dc3545;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.offer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+}
+
+.applied-offer {
+    padding: 12px;
+    background: #d4edda;
+    border: 1px solid #28a745;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+}
+
+.applied-offer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.remove-offer-btn {
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 12px;
+    text-decoration: underline;
+}
+
+.offer-message {
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+
+.offer-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.offer-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.payment-row.discount {
+    color: #28a745;
+}
+
+.payment-row.discount span {
+    color: #28a745;
+}

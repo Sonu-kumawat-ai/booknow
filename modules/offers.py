@@ -268,7 +268,7 @@ def get_offers():
 
 @offers_bp.route('/get-applicable-offers', methods=['POST'])
 def get_applicable_offers():
-    """Get offers applicable to a specific booking (for users at payment)"""
+    """Get all offers with eligibility status for a specific booking"""
     try:
         data = request.get_json()
         showtime_id = data.get('showtime_id')
@@ -286,39 +286,49 @@ def get_applicable_offers():
         theatre_id = showtime['theatre_id']
         current_date = datetime.now().strftime('%Y-%m-%d')
         
-        # Build query for applicable offers
-        offers_query = {
+        # Get ALL active offers
+        all_offers_query = {
             'status': 'active',
             'valid_from': {'$lte': current_date},
-            'valid_until': {'$gte': current_date},
-            '$or': [
-                # All offers
-                {'applicable_to': 'all'},
-                # Theatre-specific offers (single or multiple)
-                {'applicable_to': 'theatre', 'theatre_id': theatre_id},
-                {'applicable_to': 'theatres', 'theatre_ids': theatre_id},
-                # Movie-specific offers (single or multiple)
-                {'applicable_to': 'movies', 'movie_ids': movie_id},
-                # Theatre's movie-specific offers
-                {'applicable_to': 'theatre_movies', 'theatre_id': theatre_id, 'movie_ids': movie_id}
-            ]
+            'valid_until': {'$gte': current_date}
         }
         
-        offers = list(offers_bp.mongo.db.offers.find(offers_query))
+        all_offers = list(offers_bp.mongo.db.offers.find(all_offers_query))
         
-        # Filter by min_purchase and usage_limit
-        applicable_offers = []
-        for offer in offers:
+        # Process each offer and determine eligibility
+        offers_with_status = []
+        for offer in all_offers:
+            offer['_id'] = str(offer['_id'])
+            
+            # Check eligibility
+            is_eligible = True
+            ineligible_reason = None
+            
+            # Check applicability
+            applicable_to = offer.get('applicable_to', 'all')
+            if applicable_to == 'theatre' and offer.get('theatre_id') != theatre_id:
+                is_eligible = False
+                ineligible_reason = 'Offer not valid for this theatre'
+            elif applicable_to == 'theatres' and theatre_id not in offer.get('theatre_ids', []):
+                is_eligible = False
+                ineligible_reason = 'Offer not valid for this theatre'
+            elif applicable_to == 'movies' and movie_id not in offer.get('movie_ids', []):
+                is_eligible = False
+                ineligible_reason = 'Offer not valid for this movie'
+            elif applicable_to == 'theatre_movies':
+                if offer.get('theatre_id') != theatre_id or movie_id not in offer.get('movie_ids', []):
+                    is_eligible = False
+                    ineligible_reason = 'Offer not valid for this movie at this theatre'
+            
             # Check minimum purchase
-            if offer.get('min_purchase', 0) > amount:
-                continue
+            if is_eligible and offer.get('min_purchase', 0) > amount:
+                is_eligible = False
+                ineligible_reason = f'Minimum purchase of ₹{offer["min_purchase"]} required'
             
             # Check usage limit
-            if offer.get('usage_limit', 0) > 0 and offer.get('usage_count', 0) >= offer.get('usage_limit', 0):
-                continue
-            
-            # Convert ObjectId to string
-            offer['_id'] = str(offer['_id'])
+            if is_eligible and offer.get('usage_limit', 0) > 0 and offer.get('usage_count', 0) >= offer.get('usage_limit', 0):
+                is_eligible = False
+                ineligible_reason = 'Offer usage limit reached'
             
             # Calculate potential discount
             if offer['discount_type'] == 'percentage':
@@ -330,10 +340,12 @@ def get_applicable_offers():
             
             offer['calculated_discount'] = round(discount, 2)
             offer['final_amount'] = round(amount - discount, 2)
+            offer['is_eligible'] = is_eligible
+            offer['ineligible_reason'] = ineligible_reason
             
-            applicable_offers.append(offer)
+            offers_with_status.append(offer)
         
-        return jsonify({'success': True, 'offers': applicable_offers})
+        return jsonify({'success': True, 'offers': offers_with_status})
         
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
