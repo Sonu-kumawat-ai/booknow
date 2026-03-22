@@ -63,6 +63,7 @@ def calendar_connect():
         access_type='offline',
         prompt='consent'
     )
+    return redirect(request_uri)
 
 
 @calendar_bp.route('/calendar/oauth2callback')

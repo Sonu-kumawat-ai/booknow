@@ -306,7 +306,7 @@ window.addEventListener('DOMContentLoaded', function() {
     if (existingMovieContainer) {
         // Helper to clear autofill fields and reset preview/buttons
         const clearAutofill = () => {
-            const ids = ['title','description','poster_url','director','cast','duration','release_date','language','certificate','trailer_url'];
+            const ids = ['title','description','poster_url','director','cast','duration','release_date','language','certificate','trailer_url','selected_movie_id'];
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -334,15 +334,6 @@ window.addEventListener('DOMContentLoaded', function() {
                 b.classList.remove('selected');
             });
         };
-
-        // Add a clear-autofill button above the list for convenience
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'btn btn-outline';
-        clearBtn.id = 'clear_autofill_btn';
-        clearBtn.textContent = 'Clear Autofill';
-        clearBtn.addEventListener('click', clearAutofill);
-        existingMovieContainer.insertAdjacentElement('beforebegin', clearBtn);
 
         fetch('/movies-for-form')
             .then(response => {
@@ -411,6 +402,8 @@ window.addEventListener('DOMContentLoaded', function() {
                         setIf('language', mm.language || '');
                         setIf('certificate', mm.certificate || '');
                         setIf('trailer_url', mm.trailer_url || '');
+                        // Store the selected movie's ID for direct use on form submission
+                        setIf('selected_movie_id', id);
 
                         // Genres (multi-select)
                         const gSelect = document.getElementById('genre');

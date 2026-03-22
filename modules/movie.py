@@ -60,6 +60,7 @@ def add_movie():
         genre = ', '.join([g for g in genre_list if g]) if genre_list else ''
         certificate = request.form.get('certificate', '')
         trailer_url = request.form.get('trailer_url', '')
+        selected_movie_id = request.form.get('selected_movie_id', '')  # From autofill
         
         show_dates = request.form.getlist('show_date[]')
         show_times = request.form.getlist('show_time[]')
@@ -75,55 +76,73 @@ def add_movie():
         # Convert title to uppercase
         title = title.upper()
 
-        # Check if movie already exists (based on title, duration, release_date, and director)
-        existing_movie = movie_bp.mongo.db.movies.find_one({
-            'title': title,
-            'duration': int(duration),
-            'release_date': release_date,
-            'director': director
-        })
-
-        if existing_movie:
-            movie_id = existing_movie['_id']
-            # message differs based on role
-            if user.get('role') == 'theatre_owner':
-                flash(f'Movie "{title}" already exists. Adding showtimes to existing movie.', 'success')
-            else:
-                flash(f'Movie "{title}" already exists.', 'success')
-        else:
-            # Determine movie status based on release date and user role
-            movie_status = 'theatre'  # default
-            if user.get('role') == 'admin':
-                # Admin can explicitly set status or it's calculated from release date
-                release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
-                current_date = datetime.now().date()
-                days_until_release = (release_date_obj - current_date).days
-                
-                # If release date is more than 7 days away, mark as upcoming
-                if days_until_release > 7:
-                    movie_status = 'upcoming'
+        # Check if a movie was selected via autofill
+        if selected_movie_id:
+            try:
+                existing_movie = movie_bp.mongo.db.movies.find_one({'_id': ObjectId(selected_movie_id)})
+                if existing_movie:
+                    movie_id = existing_movie['_id']
+                    if user.get('role') == 'theatre_owner':
+                        flash(f'Movie "{title}" selected. Adding showtimes to existing movie.', 'success')
+                    else:
+                        flash(f'Movie "{title}" selected.', 'success')
                 else:
-                    movie_status = 'theatre'
-            else:
-                # Theatre owners can only add movies that are releasing now
-                movie_status = 'theatre'
-            
-            movie_data = {
+                    # Selected movie not found, fall back to creating new
+                    selected_movie_id = ''
+            except:
+                # Invalid ObjectId, fall back to creating new
+                selected_movie_id = ''
+        
+        # If no autofill, check if movie already exists by matching fields
+        if not selected_movie_id:
+            existing_movie = movie_bp.mongo.db.movies.find_one({
                 'title': title,
-                'description': description,
-                'poster_url': poster_url,
-                'director': director,
-                'cast': cast,
                 'duration': int(duration),
                 'release_date': release_date,
-                'language': language,
-                'genre': genre,
-                'certificate': certificate,
-                'trailer_url': trailer_url,
-                'status': movie_status,
-                'created_at': datetime.utcnow()
-            }
-            movie_id = movie_bp.mongo.db.movies.insert_one(movie_data).inserted_id
+                'director': director
+            })
+
+            if existing_movie:
+                movie_id = existing_movie['_id']
+                # message differs based on role
+                if user.get('role') == 'theatre_owner':
+                    flash(f'Movie "{title}" already exists. Adding showtimes to existing movie.', 'success')
+                else:
+                    flash(f'Movie "{title}" already exists.', 'success')
+            else:
+                # Determine movie status based on release date and user role
+                movie_status = 'theatre'  # default
+                if user.get('role') == 'admin':
+                    # Admin can explicitly set status or it's calculated from release date
+                    release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
+                    current_date = datetime.now().date()
+                    days_until_release = (release_date_obj - current_date).days
+                    
+                    # If release date is more than 7 days away, mark as upcoming
+                    if days_until_release > 7:
+                        movie_status = 'upcoming'
+                    else:
+                        movie_status = 'theatre'
+                else:
+                    # Theatre owners can only add movies that are releasing now
+                    movie_status = 'theatre'
+                
+                movie_data = {
+                    'title': title,
+                    'description': description,
+                    'poster_url': poster_url,
+                    'director': director,
+                    'cast': cast,
+                    'duration': int(duration),
+                    'release_date': release_date,
+                    'language': language,
+                    'genre': genre,
+                    'certificate': certificate,
+                    'trailer_url': trailer_url,
+                    'status': movie_status,
+                    'created_at': datetime.utcnow()
+                }
+                movie_id = movie_bp.mongo.db.movies.insert_one(movie_data).inserted_id
 
         # If the requester is a theatre owner, require and create showtimes
         if user.get('role') == 'theatre_owner':
@@ -141,23 +160,16 @@ def add_movie():
                 flash('Please provide screen and prices for all showtimes!', 'error')
                 return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
 
-            # Validate show dates are not in the past and not before an upcoming movie's release
-            release_date_obj = datetime.strptime(release_date, '%Y-%m-%d').date()
+            # Validate show dates are today or in the future (no past dates)
             current_date_obj = datetime.now().date()
             
             for show_date in show_dates:
                 show_date_obj = datetime.strptime(show_date, '%Y-%m-%d').date()
                 
-                # Don't allow shows in the past
+                # Allow shows only for today and future dates
                 if show_date_obj < current_date_obj:
-                    flash(f'Show date ({show_date}) cannot be in the past!', 'error')
+                    flash(f'Show date ({show_date}) cannot be in the past! Only today and future dates are allowed.', 'error')
                     return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
-                
-                # Only enforce release date check for movies that haven't been released yet
-                if release_date_obj > current_date_obj:
-                    if show_date_obj < release_date_obj:
-                        flash(f'Show date ({show_date}) cannot be before the release date ({release_date})!', 'error')
-                        return render_template('add_movie.html', user=user, user_data=user, theatre=theatre, screens=screens, all_theatres=all_theatres)
 
             # Create showtimes for this movie
             movie_duration = int(duration)
@@ -251,7 +263,8 @@ def movies_for_form():
         return jsonify({'error': 'Not authorized'}), 403
 
     try:
-        movies = list(movie_bp.mongo.db.movies.find({}))
+        # Filter to show only 'theatre' status movies (not upcoming) for autofill
+        movies = list(movie_bp.mongo.db.movies.find({'status': 'theatre'}))
         result = []
         for m in movies:
             genre_list = [g.strip() for g in m.get('genre', '').split(',') if g.strip()]
@@ -292,46 +305,83 @@ def movie_details(movie_id):
             flash('Movie not found.', 'error')
             return redirect(url_for('main.index'))
         
-        # Get current date and time
+        # Get current date
         current_datetime = datetime.now()
         current_date = current_datetime.strftime('%Y-%m-%d')
-        current_time = current_datetime.strftime('%H:%M')
-        
-        # Get showtimes for this movie (only future showtimes)
+
+        # Get showtimes for this movie (today onward).
+        # Include equivalent movie records (same title/release/director) to handle legacy duplicates.
+        movie_lookup = {'title': movie.get('title')}
+        if movie.get('release_date'):
+            movie_lookup['release_date'] = movie.get('release_date')
+        if movie.get('director'):
+            movie_lookup['director'] = movie.get('director')
+
+        equivalent_movies = list(movie_bp.mongo.db.movies.find(movie_lookup, {'_id': 1}))
+        candidate_movie_ids = []
+        for mv in equivalent_movies:
+            mid = mv.get('_id')
+            if mid is None:
+                continue
+            candidate_movie_ids.append(mid)
+            candidate_movie_ids.append(str(mid))
+
+        if not candidate_movie_ids:
+            movie_id_str = str(movie['_id'])
+            candidate_movie_ids = [movie['_id'], movie_id_str]
+
         showtimes = list(movie_bp.mongo.db.showtimes.find({
-            'movie_id': str(movie['_id']),
+            'movie_id': {'$in': candidate_movie_ids},
             'status': 'active',
-            '$or': [
-                {'show_date': {'$gt': current_date}},
-                {
-                    'show_date': current_date,
-                    'show_time': {'$gte': current_time}
-                }
-            ]
+            'show_date': {'$gte': current_date}
         }))
+        showtimes.sort(key=lambda s: (s.get('show_date', ''), s.get('show_time', '')))
         
         # Group showtimes by theatre
         theatres_dict = {}
         for showtime in showtimes:
             try:
-                theatre_id = showtime['theatre_id']
-                if theatre_id not in theatres_dict:
-                    theatre = movie_bp.mongo.db.theatres.find_one({'_id': ObjectId(theatre_id)})
+                theatre_id = showtime.get('theatre_id')
+                screen = None
+
+                # Fallback: derive theatre_id from screen if missing/invalid in showtime
+                if not theatre_id and showtime.get('screen_id'):
+                    try:
+                        screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+                        if screen:
+                            theatre_id = screen.get('theatre_id')
+                    except Exception:
+                        screen = None
+
+                theatre_id_key = str(theatre_id) if theatre_id is not None else None
+                if not theatre_id_key:
+                    continue
+
+                if theatre_id_key not in theatres_dict:
+                    theatre = None
+                    try:
+                        theatre = movie_bp.mongo.db.theatres.find_one({'_id': ObjectId(theatre_id)})
+                    except Exception:
+                        theatre = None
                     if theatre:
-                        theatres_dict[theatre_id] = {
-                            'theatre_id': theatre_id,
+                        theatres_dict[theatre_id_key] = {
+                            'theatre_id': theatre_id_key,
                             'theatre_name': theatre.get('name', 'Unknown'),
                             'theatre_city': theatre.get('city', ''),
                             'theatre_address': theatre.get('address', ''),
                             'showtimes': []
                         }
                 
-                if theatre_id in theatres_dict:
-                    screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+                if theatre_id_key in theatres_dict:
+                    if not screen and showtime.get('screen_id'):
+                        try:
+                            screen = movie_bp.mongo.db.screens.find_one({'_id': ObjectId(showtime['screen_id'])})
+                        except Exception:
+                            screen = None
                     # Get actual capacity from screen, fallback to showtime's available_seats
                     screen_capacity = screen.get('seating_capacity', showtime.get('available_seats', 100)) if screen else showtime.get('available_seats', 100)
                     
-                    theatres_dict[theatre_id]['showtimes'].append({
+                    theatres_dict[theatre_id_key]['showtimes'].append({
                         '_id': str(showtime['_id']),
                         'show_date': showtime['show_date'],
                         'show_time': showtime['show_time'],

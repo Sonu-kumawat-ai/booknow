@@ -28,10 +28,9 @@ def index():
     user_logged_in = 'user_id' in session
     username = session.get('username', '')
     
-    # Get current date and time
+    # Get current date
     current_datetime = datetime.now()
     current_date = current_datetime.strftime('%Y-%m-%d')
-    current_time = current_datetime.strftime('%H:%M')
     
     # Fetch only theatre movies (not upcoming) for home page
     all_movies = list(main_bp.mongo.db.movies.find({'status': 'theatre'}))
@@ -40,17 +39,30 @@ def index():
     for movie in all_movies:
         movie_id_str = str(movie['_id'])
 
-        # Check if this movie has any future showtimes
+        # Check if this movie has any future showtimes.
+        # Include equivalent movie records (same title/release/director) to handle legacy duplicates.
+        movie_lookup = {'title': movie.get('title')}
+        if movie.get('release_date'):
+            movie_lookup['release_date'] = movie.get('release_date')
+        if movie.get('director'):
+            movie_lookup['director'] = movie.get('director')
+
+        equivalent_movies = list(main_bp.mongo.db.movies.find(movie_lookup, {'_id': 1}))
+        candidate_movie_ids = []
+        for mv in equivalent_movies:
+            mid = mv.get('_id')
+            if mid is None:
+                continue
+            candidate_movie_ids.append(mid)
+            candidate_movie_ids.append(str(mid))
+
+        if not candidate_movie_ids:
+            candidate_movie_ids = [movie['_id'], movie_id_str]
+
         future_showtimes_count = main_bp.mongo.db.showtimes.count_documents({
-            'movie_id': movie_id_str,
+            'movie_id': {'$in': candidate_movie_ids},
             'status': 'active',
-            '$or': [
-                {'show_date': {'$gt': current_date}},
-                {
-                    'show_date': current_date,
-                    'show_time': {'$gte': current_time}
-                }
-            ]
+            'show_date': {'$gte': current_date}
         })
 
         # Prepare movie data for template
@@ -115,10 +127,9 @@ def all_movies():
     user_logged_in = 'user_id' in session
     username = session.get('username', '')
     
-    # Get current date and time
+    # Get current date
     current_datetime = datetime.now()
     current_date = current_datetime.strftime('%Y-%m-%d')
-    current_time = current_datetime.strftime('%H:%M')
     
     # Get status filter from query parameter (default: theatre)
     status_filter = request.args.get('status', 'theatre')
@@ -169,17 +180,30 @@ def all_movies():
     for movie in matched_movies:
         movie_id_str = str(movie['_id'])
 
-        # Check if this movie has any future showtimes (for display purposes)
+        # Check if this movie has any future showtimes (for display purposes).
+        # Include equivalent movie records (same title/release/director) to handle legacy duplicates.
+        movie_lookup = {'title': movie.get('title')}
+        if movie.get('release_date'):
+            movie_lookup['release_date'] = movie.get('release_date')
+        if movie.get('director'):
+            movie_lookup['director'] = movie.get('director')
+
+        equivalent_movies = list(main_bp.mongo.db.movies.find(movie_lookup, {'_id': 1}))
+        candidate_movie_ids = []
+        for mv in equivalent_movies:
+            mid = mv.get('_id')
+            if mid is None:
+                continue
+            candidate_movie_ids.append(mid)
+            candidate_movie_ids.append(str(mid))
+
+        if not candidate_movie_ids:
+            candidate_movie_ids = [movie['_id'], movie_id_str]
+
         future_showtimes_count = main_bp.mongo.db.showtimes.count_documents({
-            'movie_id': movie_id_str,
+            'movie_id': {'$in': candidate_movie_ids},
             'status': 'active',
-            '$or': [
-                {'show_date': {'$gt': current_date}},
-                {
-                    'show_date': current_date,
-                    'show_time': {'$gte': current_time}
-                }
-            ]
+            'show_date': {'$gte': current_date}
         })
 
         # Basic movie fields for template

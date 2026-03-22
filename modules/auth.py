@@ -2,6 +2,7 @@
 Authentication routes module
 Handles user registration, login, and logout with OTP verification and Google OAuth
 """
+
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash

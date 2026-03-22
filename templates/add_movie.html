@@ -99,6 +99,8 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('movie.add_movie') }}" class="settings-form">
+                            <!-- Hidden field to store selected movie ID for autofill -->
+                            <input type="hidden" id="selected_movie_id" name="selected_movie_id" value="">
                             <div class="form-group">
                                 <label for="existing_movie_list">Choose From Existing Movies (optional)</label>
                                 <div id="existing_movie_list" class="existing-movie-carousel">

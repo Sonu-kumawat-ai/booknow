@@ -48,6 +48,17 @@ def add_review():
     has_watched = False
     current_time = datetime.utcnow()
     
+    # Get movie duration to calculate show end time
+    movie = None
+    try:
+        movie = reviews_bp.mongo.db.movies.find_one({'_id': ObjectId(movie_id)})
+    except Exception:
+        movie = reviews_bp.mongo.db.movies.find_one({'_id': movie_id})
+    
+    movie_duration = 120  # Default to 2 hours if not found
+    if movie and movie.get('duration'):
+        movie_duration = int(movie.get('duration', 120))
+    
     for booking in user_bookings:
         # Find the showtime details
         showtime = reviews_bp.mongo.db.showtimes.find_one({'_id': ObjectId(booking['showtime_id'])})
@@ -59,8 +70,8 @@ def add_review():
                 try:
                     # Parse show datetime
                     show_datetime = datetime.strptime(f"{show_date} {show_time}", '%Y-%m-%d %H:%M')
-                    # Add 3 hours for movie duration (approximate)
-                    show_end_time = show_datetime + timedelta(hours=3)
+                    # Calculate show end time using actual movie duration
+                    show_end_time = show_datetime + timedelta(minutes=movie_duration)
                     
                     # Check if show has ended
                     if current_time >= show_end_time:
