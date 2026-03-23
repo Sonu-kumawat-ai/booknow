@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup System Examples - BookNow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
+    <style>
+        body {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: var(--primary-red);
+            margin-bottom: 30px;
+        }
+        .example-section {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .example-section h3 {
+            margin-top: 0;
+            color: var(--text-dark);
+        }
+        .example-section p {
+            margin: 10px 0;
+            color: var(--text-dark);
+            opacity: 0.7;
+            font-size: 14px;
+        }
+        .btn {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            margin: 10px 5px 10px 0;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+        }
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border: 2px solid var(--border);
+        }
+        .btn-secondary:hover {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Website Popup System Examples</h1>
+
+    <div class="example-section">
+        <h3>1. Basic Modal Popup</h3>
+        <p>A simple modal with title, message, and primary button</p>
+        <button class="btn" onclick="basicPopup()">Show Basic Popup</button>
+    </div>
+
+    <div class="example-section">
+        <h3>2. Modal with Secondary Button</h3>
+        <p>Modal with two action buttons (Yes/No, OK/Cancel, etc.)</p>
+        <button class="btn" onclick="confirmPopup()">Show Confirm Dialog</button>
+    </div>
+
+    <div class="example-section">
+        <h3>3. Success Popup</h3>
+        <p>Pre-styled success notification with checkmark</p>
+        <button class="btn" onclick="successPopup()">Show Success</button>
+    </div>
+
+    <div class="example-section">
+        <h3>4. Error Popup</h3>
+        <p>Pre-styled error notification</p>
+        <button class="btn" onclick="errorPopup()">Show Error</button>
+    </div>
+
+    <div class="example-section">
+        <h3>5. Announcement Popup</h3>
+        <p>Announcement banner with auto-close (5 seconds)</p>
+        <button class="btn" onclick="announcementPopup()">Show Announcement</button>
+    </div>
+
+    <div class="example-section">
+        <h3>6. Special Offer Popup</h3>
+        <p>Pre-styled offer popup with discount display and coupon code</p>
+        <button class="btn" onclick="offerPopup()">Show Offer</button>
+    </div>
+
+    <div class="example-section">
+        <h3>7. Toast Notification (Bottom Right)</h3>
+        <p>Non-blocking toast notifications in corner</p>
+        <button class="btn btn-secondary" onclick="showToast('Success!', 'success')">Success Toast</button>
+        <button class="btn btn-secondary" onclick="showToast('Error!', 'error')">Error Toast</button>
+        <button class="btn btn-secondary" onclick="showToast('Info', 'info')">Info Toast</button>
+        <button class="btn btn-secondary" onclick="showToast('Warning!', 'warning')">Warning Toast</button>
+    </div>
+
+    <div class="example-section">
+        <h3>8. Custom HTML Content</h3>
+        <p>Popup with custom HTML content (for complex layouts)</p>
+        <button class="btn" onclick="customHtmlPopup()">Show Custom Content</button>
+    </div>
+
+    <div class="example-section">
+        <h3>9. Booking Confirmation Example</h3>
+        <p>Real-world example: Booking confirmation popup</p>
+        <button class="btn" onclick="bookingConfirmation()">Show Booking Confirmation</button>
+    </div>
+
+    <div class="example-section">
+        <h3>10. Form Validation Example</h3>
+        <p>Real-world example: Form validation error</p>
+        <button class="btn" onclick="formValidation()">Show Validation Error</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popup.js') }}"></script>
+
+    <script>
+        function basicPopup() {
+            showPopup({
+                title: 'Welcome!',
+                icon: '👋',
+                message: 'This is a basic popup. Click OK to close.',
+                primaryBtn: 'OK',
+                closeable: true,
+                onPrimaryClick: () => {
+                    showToast('You clicked OK!', 'success');
+                }
+            });
+        }
+
+        function confirmPopup() {
+            showPopup({
+                title: 'Confirm Action',
+                icon: '❓',
+                message: 'Are you sure you want to proceed with this action?',
+                primaryBtn: 'Yes, Proceed',
+                secondaryBtn: 'Cancel',
+                closeable: true,
+                onPrimaryClick: () => {
+                    showToast('Action confirmed!', 'success');
+                },
+                onSecondaryClick: () => {
+                    showToast('Action cancelled', 'info');
+                }
+            });
+        }
+
+        function successPopup() {
+            websitePopup.showSuccess('Your booking has been confirmed successfully!');
+        }
+
+        function errorPopup() {
+            websitePopup.showError('Something went wrong. Please try again.');
+        }
+
+        function announcementPopup() {
+            showAnnouncement('🎉 New summer collection available! Book your favorite movies now!', 5000);
+        }
+
+        function offerPopup() {
+            showOffer(
+                'Summer Sale',
+                50,
+                'Get 50% discount on all movie bookings this summer!',
+                'SUMMER50',
+                () => {
+                    showToast('Coupon SUMMER50 applied!', 'success');
+                }
+            );
+        }
+
+        function customHtmlPopup() {
+            showPopup({
+                title: 'Booking Details',
+                icon: '🎫',
+                html: `
+                    <div style="color: var(--text-dark);">
+                        <p style="margin-bottom: 16px;">Your booking has been successful!</p>
+                        <div class="popup-highlight">
+                            <p style="margin: 0 0 8px 0;"><strong>Booking ID:</strong></p>
+                            <p style="margin: 0 0 12px 0; font-size: 18px; color: var(--primary-red); font-weight: 700;">BK#2026031901</p>
+                            
+                            <p style="margin: 12px 0 8px 0;"><strong>Movie:</strong> Avatar: The Way of Water</p>
+                            <p style="margin: 0 0 8px 0;"><strong>Theatre:</strong> PVR Cinemas, Delhi</p>
+                            <p style="margin: 0 0 8px 0;"><strong>Seats:</strong> A1, A2, A3</p>
+                            <p style="margin: 0;"><strong>Amount Paid:</strong> ₹750</p>
+                        </div>
+                        <p style="font-size: 12px; opacity: 0.7; margin-top: 12px; margin-bottom: 0;">
+                            Please arrive 15 minutes before the show time.
+                        </p>
+                    </div>
+                `,
+                primaryBtn: 'View My Bookings',
+                closeable: true,
+                onPrimaryClick: () => {
+                    showToast('Redirecting to bookings...', 'info');
+                }
+            });
+        }
+
+        function bookingConfirmation() {
+            showPopup({
+                title: 'Booking Confirmed!',
+                icon: '✅',
+                html: `
+                    <div style="color: var(--text-dark); text-align: center;">
+                        <p style="font-size: 18px; margin-bottom: 20px; font-weight: 600;">Your tickets are booked!</p>
+                        <table style="width: 100%; font-size: 14px; margin: 20px 0; text-align: left;">
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 8px 0;"><strong>Movie:</strong></td>
+                                <td style="text-align: right;">Inception</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 8px 0;"><strong>Date:</strong></td>
+                                <td style="text-align: right;">25 Mar 2026</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 8px 0;"><strong>Time:</strong></td>
+                                <td style="text-align: right;">7:00 PM</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0;"><strong>Total:</strong></td>
+                                <td style="text-align: right; color: var(--primary-red); font-weight: 700;">₹900</td>
+                            </tr>
+                        </table>
+                        <p style="font-size: 12px; opacity: 0.6;">A confirmation email has been sent to your inbox</p>
+                    </div>
+                `,
+                primaryBtn: 'Download Ticket',
+                secondaryBtn: 'View Details',
+                closeable: true,
+                onPrimaryClick: () => {
+                    showToast('Ticket downloaded!', 'success');
+                },
+                onSecondaryClick: () => {
+                    showToast('Opening booking details...', 'info');
+                }
+            });
+        }
+
+        function formValidation() {
+            showPopup({
+                title: 'Validation Error',
+                icon: '❌',
+                message: 'Please fix the following errors:\n\n• Email address is invalid\n• Phone number is required',
+                primaryBtn: 'Go Back',
+                closeable: true,
+                onPrimaryClick: () => {
+                    // Form validation handling
+                }
+            });
+        }
+    </script>
+</body>
+</html>

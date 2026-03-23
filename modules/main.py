@@ -279,3 +279,8 @@ def about():
         user_data = main_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
 
     return render_template('about.html', logged_in=user_logged_in, username=username, user_data=user_data)
+
+@main_bp.route('/popup-examples')
+def popup_examples():
+    """Popup system examples page"""
+    return render_template('popup_examples.html')

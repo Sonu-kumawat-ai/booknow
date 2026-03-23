@@ -572,3 +572,201 @@ def booking_confirmation(booking_id):
     except Exception:
         flash('Invalid booking ID.', 'error')
         return redirect(url_for('main.index'))
+
+@booking_bp.route('/cancel-booking/<booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    """Cancel a booking and free the seat locks"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Please login first'}), 401
+    
+    try:
+        # Fetch booking details and verify ownership
+        booking = booking_bp.mongo.db.bookings.find_one({
+            '_id': ObjectId(booking_id),
+            'user_id': session['user_id']
+        })
+        
+        if not booking:
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+        
+        # Check if booking is already cancelled
+        if booking.get('status') == 'cancelled':
+            return jsonify({'success': False, 'error': 'Booking is already cancelled'}), 400
+        
+        # Check if show has already started (cannot cancel within 30 minutes of show time)
+        showtime = booking_bp.mongo.db.showtimes.find_one({'_id': ObjectId(booking['showtime_id'])})
+        if showtime:
+            show_datetime = datetime.strptime(
+                f"{showtime['show_date']} {showtime['show_time']}",
+                '%Y-%m-%d %H:%M'
+            )
+            time_until_show = show_datetime - datetime.utcnow()
+            if time_until_show.total_seconds() < 30 * 60:  # 30 minutes
+                return jsonify({
+                    'success': False,
+                    'error': 'Cannot cancel booking within 30 minutes of show time'
+                }), 400
+        
+        # Update booking status to cancelled
+        booking_bp.mongo.db.bookings.update_one(
+            {'_id': ObjectId(booking_id)},
+            {
+                '$set': {
+                    'status': 'cancelled',
+                    'cancellation_date': datetime.utcnow()
+                }
+            }
+        )
+        
+        # Free the seat locks - delete booking_seats records
+        booking_bp.mongo.db.booking_seats.delete_many({
+            'booking_id': booking_id
+        })
+        
+        # Process refund
+        payment = booking_bp.mongo.db.payments.find_one({'booking_id': booking_id})
+        if payment and payment.get('payment_status') == 'completed':
+            try:
+                # Process refund via Razorpay
+                razorpay_payment_id = payment.get('razorpay_payment_id')
+                if razorpay_payment_id:
+                    # Refund amount in paise
+                    refund_amount = int(payment.get('amount', 0)) * 100
+                    refund_data = {
+                        'amount': refund_amount,
+                        'speed': 'optimum'  # optimum, normal
+                    }
+                    
+                    try:
+                        refund = booking_bp.razorpay_client.payment.refund(
+                            razorpay_payment_id,
+                            refund_data
+                        )
+                        # Update payment status
+                        booking_bp.mongo.db.payments.update_one(
+                            {'booking_id': booking_id},
+                            {
+                                '$set': {
+                                    'payment_status': 'refunded',
+                                    'refund_id': refund.get('id'),
+                                    'refund_date': datetime.utcnow()
+                                }
+                            }
+                        )
+                    except Exception as e:
+                        # Log refund error but don't fail the cancellation
+                        print(f"Refund error for booking {booking_id}: {str(e)}")
+            except Exception as e:
+                print(f"Error processing refund: {str(e)}")
+        
+        # Send cancellation email to user
+        try:
+            user = booking_bp.mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+            if user and user.get('email'):
+                msg = Message(
+                    subject='Booking Cancelled - BookNow',
+                    recipients=[user['email']]
+                )
+                
+                movie = booking_bp.mongo.db.movies.find_one({
+                    '_id': ObjectId(showtime['movie_id'])
+                }) if showtime else None
+                theatre = booking_bp.mongo.db.theatres.find_one({
+                    '_id': ObjectId(showtime['theatre_id'])
+                }) if showtime else None
+                
+                msg.html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            background-color: #f4f4f4;
+                            margin: 0;
+                            padding: 0;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: 20px auto;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }}
+                        .email-header {{
+                            background-color: #D62828;
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                        }}
+                        .email-header h1 {{
+                            margin: 0;
+                            font-size: 28px;
+                        }}
+                        .email-body {{
+                            padding: 30px;
+                        }}
+                        .booking-info {{
+                            background-color: #f9f9f9;
+                            border-left: 4px solid #FFD166;
+                            padding: 20px;
+                            margin: 20px 0;
+                        }}
+                        .booking-info p {{
+                            margin: 10px 0;
+                            color: #333;
+                        }}
+                        .footer {{
+                            background-color: #2d3748;
+                            color: white;
+                            text-align: center;
+                            padding: 20px;
+                            font-size: 14px;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="email-header">
+                            <h1>Booking Cancelled</h1>
+                        </div>
+                        <div class="email-body">
+                            <p>Dear {user.get('username', 'User')},</p>
+                            <p>Your booking has been cancelled successfully.</p>
+                            
+                            <div class="booking-info">
+                                <p><strong>Booking ID:</strong> {booking_id}</p>
+                                <p><strong>Movie:</strong> {movie.get('title', 'N/A') if movie else 'N/A'}</p>
+                                <p><strong>Theatre:</strong> {theatre.get('name', 'N/A') if theatre else 'N/A'}</p>
+                                <p><strong>Show Date:</strong> {showtime.get('show_date', 'N/A') if showtime else 'N/A'}</p>
+                                <p><strong>Show Time:</strong> {showtime.get('show_time', 'N/A') if showtime else 'N/A'}</p>
+                                <p><strong>Seats:</strong> (Now available for other users)</p>
+                            </div>
+                            
+                            <p>If a refund was due, it will be processed within 5-7 business days.</p>
+                            <p>Thank you for using BookNow!</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated email. Please do not reply.</p>
+                            <p>&copy; 2026 BookNow. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                mail.send(msg)
+                print(f"Cancellation email sent to {user['email']} for booking {booking_id}")
+        except Exception as e:
+            print(f"Error sending cancellation email: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Booking cancelled successfully. Your seats have been freed.',
+            'redirect_url': url_for('user.profile')
+        })
+        
+    except Exception as e:
+        print(f"Error cancelling booking: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500

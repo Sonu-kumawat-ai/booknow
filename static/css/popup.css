@@ -1,0 +1,319 @@
+/* Global Website Popup Styles */
+
+/* Modal Overlay */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    animation: fadeInOverlay 0.3s ease-out;
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.popup-overlay.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Popup Container */
+.popup-container {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUpPopup 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUpPopup {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Popup Header */
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    color: var(--text-light);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.popup-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.popup-header .popup-icon {
+    font-size: 28px;
+    margin-right: 12px;
+}
+
+.popup-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--text-light);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.popup-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Popup Body */
+.popup-body {
+    padding: 24px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+.popup-body p {
+    margin: 0 0 12px 0;
+}
+
+.popup-body p:last-child {
+    margin-bottom: 0;
+}
+
+.popup-highlight {
+    background: var(--light-yellow);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary-red);
+    margin: 16px 0;
+}
+
+.popup-highlight strong {
+    color: var(--primary-red);
+}
+
+/* Popup Footer */
+.popup-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-light);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.popup-footer .btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.popup-btn-primary {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    color: var(--text-light);
+}
+
+.popup-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+}
+
+.popup-btn-secondary {
+    background: var(--surface);
+    color: var(--text-dark);
+    border: 2px solid var(--border);
+}
+
+.popup-btn-secondary:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+    background: rgba(230, 57, 70, 0.05);
+}
+
+/* Special Offer Popup */
+.popup-offer-badge {
+    display: inline-block;
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.popup-discount {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-red);
+    line-height: 1;
+    margin: 12px 0;
+}
+
+/* Toast Notification Popup */
+.popup-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+    z-index: 10000;
+    animation: slideInToast 0.3s ease-out;
+}
+
+@keyframes slideInToast {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.popup-toast.show {
+    display: flex;
+}
+
+.popup-toast.hide {
+    animation: slideOutToast 0.3s ease-out;
+}
+
+@keyframes slideOutToast {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.popup-toast-icon {
+    font-size: 20px;
+}
+
+.popup-toast-icon.success {
+    color: var(--success);
+}
+
+.popup-toast-icon.error {
+    color: var(--primary-red);
+}
+
+.popup-toast-icon.info {
+    color: var(--info);
+}
+
+.popup-toast-message {
+    flex: 1;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .popup-container {
+        border-radius: var(--radius-md);
+        max-width: calc(100% - 40px);
+    }
+
+    .popup-header {
+        padding: 20px;
+    }
+
+    .popup-header h2 {
+        font-size: 18px;
+    }
+
+    .popup-header .popup-icon {
+        font-size: 24px;
+    }
+
+    .popup-body {
+        padding: 20px;
+        font-size: 15px;
+    }
+
+    .popup-footer {
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 20px;
+    }
+
+    .popup-footer .btn {
+        width: 100%;
+    }
+
+    .popup-toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .popup-container {
+        width: 95%;
+    }
+
+    .popup-header h2 {
+        font-size: 16px;
+    }
+
+    .popup-disable-scroll {
+        overflow: hidden;
+    }
+
+    .popup-discount {
+        font-size: 28px;
+    }
+}

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.title }} - BookNow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/movie_details.css') }}">
 </head>
 <body data-user-id="{{ session.get('user_id') or '' }}">
@@ -335,6 +336,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popup.js') }}"></script>
     <script src="{{ url_for('static', filename='js/movie_details.js') }}"></script>
     <script>
         window.CURRENT_USER_ID = document.body.getAttribute('data-user-id') || null;

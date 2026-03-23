@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Booking Confirmed - BookNow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/booking_confirmation.css') }}">
 </head>
 <body>
@@ -27,10 +28,16 @@
 
     <!-- Ticket Container -->
     <div class="ticket-container">
-        <div class="success-badge">
-            <div class="success-icon">✓</div>
-            <h1>Booking Confirmed!</h1>
-            <p>Your ticket has been booked successfully</p>
+        <div class="success-badge" id="successBadge">
+            {% if booking.status == 'cancelled' %}
+                <div class="success-icon cancelled">✕</div>
+                <h1 class="cancelled-text">Booking Cancelled</h1>
+                <p>Your booking has been cancelled successfully</p>
+            {% else %}
+                <div class="success-icon">✓</div>
+                <h1>Booking Confirmed!</h1>
+                <p>Your ticket has been booked successfully</p>
+            {% endif %}
         </div>
 
         <div class="ticket">
@@ -61,6 +68,15 @@
                 </div>
 
                 <div class="booking-details">
+                    <div class="detail-item">
+                        <label>Booking Status</label>
+                        <div class="value" id="bookingStatus" 
+                             {% if booking.status == 'cancelled' %}
+                             style="color: #DC2626; font-weight: 700;"
+                             {% endif %}>
+                            {{ booking.status|upper }}
+                        </div>
+                    </div>
                     <div class="detail-item">
                         <label>Booking Date</label>
                         <div class="value">{{ booking.booking_date.strftime('%d %b %Y') }}</div>
@@ -94,10 +110,28 @@
                 <div class="action-buttons">
                     <a href="{{ url_for('user.profile') }}" class="btn btn-secondary">View All Bookings</a>
                     <a href="{{ url_for('main.index') }}" class="btn btn-primary">Book More Tickets</a>
+                    <button id="cancelBookingBtn" class="btn btn-danger" 
+                            data-show-date="{{ booking.show_date }}" 
+                            data-show-time="{{ booking.show_time }}"
+                            data-booking-status="{{ booking.status }}"
+                            {% if booking.status == 'cancelled' %}
+                            disabled
+                            title="Booking has been cancelled"
+                            {% else %}
+                            title="Cancel booking (available only 30 minutes before show time)"
+                            {% endif %}>
+                        {% if booking.status == 'cancelled' %}
+                            Booking Cancelled
+                        {% else %}
+                            Cancel Booking
+                        {% endif %}
+                    </button>
                     {% if booking.get('calendar_event_id') %}
                         <button class="btn btn-outline" disabled>Added to Google Calendar</button>
                     {% elif user_data %}
-                        {% if user_data.get('google_tokens') %}
+                        {% if booking.status == 'cancelled' %}
+                            <button class="btn btn-outline" disabled title="Cannot add cancelled booking to calendar">Add to Google Calendar</button>
+                        {% elif user_data.get('google_tokens') %}
                             <button id="addToCalendarBtn" class="btn btn-outline">Add to Google Calendar</button>
                         {% elif user_data.get('google_id') %}
                             <a href="{{ url_for('calendar.calendar_connect') }}" class="btn btn-social btn-google">Connect Google Calendar</a>
@@ -105,7 +139,11 @@
                             <a href="{{ url_for('auth.google_login') }}" class="btn btn-social btn-google">Sign up / Sign in with Google</a>
                         {% endif %}
                     {% else %}
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-social btn-google">Login to connect</a>
+                        {% if booking.status == 'cancelled' %}
+                            <button class="btn btn-outline" disabled title="Cannot add cancelled booking to calendar">Add to Google Calendar</button>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-social btn-google">Login to connect</a>
+                        {% endif %}
                     {% endif %}
                 </div>
 
@@ -117,9 +155,11 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popup.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('addToCalendarBtn');
+            const addCalendarBtn = document.getElementById('addToCalendarBtn');
+            const cancelBookingBtn = document.getElementById('cancelBookingBtn');
 
             function createFlash(category, message) {
                 // Try to find existing flash container (used by templates)
@@ -145,30 +185,114 @@
                 setTimeout(() => { try { flash.remove(); } catch (e) {} }, 5000);
             }
 
-            if (!btn) return;
-            btn.addEventListener('click', async () => {
-                btn.disabled = true;
-                const originalText = btn.textContent;
-                btn.textContent = 'Adding...';
-                try {
-                    const resp = await fetch(`/calendar/add_event/{{ booking._id }}`, {method: 'POST'});
-                    const data = await resp.json();
-                    if (resp.ok && data.success) {
-                        // Show flash-style success message and disable button permanently
-                        createFlash('success', 'Added to Google Calendar ✓');
-                        btn.textContent = 'Added';
-                        btn.disabled = true;
-                    } else {
-                        createFlash('error', data.error || 'Failed to add event');
-                        btn.disabled = false;
-                        btn.textContent = originalText;
+            // Check if cancellation is still available (30 minutes before show time)
+            if (cancelBookingBtn) {
+                const bookingStatus = cancelBookingBtn.getAttribute('data-booking-status');
+                const showDateStr = cancelBookingBtn.getAttribute('data-show-date');
+                const showTimeStr = cancelBookingBtn.getAttribute('data-show-time');
+
+                // Skip time check if booking is already cancelled
+                if (bookingStatus === 'cancelled') {
+                    cancelBookingBtn.disabled = true;
+                    cancelBookingBtn.style.cursor = 'not-allowed';
+                } else {
+                    try {
+                        // Parse show datetime
+                        const showDateTime = new Date(`${showDateStr}T${showTimeStr}:00`);
+                        const currentTime = new Date();
+                        const timeUntilShow = (showDateTime - currentTime) / (1000 * 60); // Convert to minutes
+
+                        if (timeUntilShow <= 30) {
+                            // Cancel button is no longer available
+                            cancelBookingBtn.disabled = true;
+                            const minutesLeft = Math.max(0, Math.floor(timeUntilShow));
+                            cancelBookingBtn.title = `Cancellation not available. Show starts in ${minutesLeft} minutes.`;
+                            cancelBookingBtn.style.cursor = 'not-allowed';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing show time:', e);
                     }
-                } catch (e) {
-                    createFlash('error', 'Network error while adding to calendar');
-                    btn.disabled = false;
-                    btn.textContent = originalText;
                 }
-            });
+
+                // Handle cancel button click
+                if (!cancelBookingBtn.disabled) {
+                    cancelBookingBtn.addEventListener('click', async (e) => {
+                        // Double check time before cancellation
+                        const showDateTime = new Date(`${showDateStr}T${showTimeStr}:00`);
+                        const currentTime = new Date();
+                        const timeUntilShow = (showDateTime - currentTime) / (1000 * 60);
+
+                        if (timeUntilShow <= 30) {
+                            createFlash('error', 'Cancellation is only available 30 minutes before the show starts.');
+                            return;
+                        }
+
+                        const confirmed = confirm(
+                            'Are you sure you want to cancel this booking?\n\n' +
+                            'Your seats will be freed and made available for other users.\n' +
+                            'If refunded, you will receive your money within 5-7 business days.'
+                        );
+
+                        if (!confirmed) return;
+
+                        cancelBookingBtn.disabled = true;
+                        const originalText = cancelBookingBtn.textContent;
+                        cancelBookingBtn.textContent = 'Cancelling...';
+
+                        try {
+                            const resp = await fetch(`/cancel-booking/{{ booking._id }}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            const data = await resp.json();
+
+                            if (resp.ok && data.success) {
+                                createFlash('success', '✓ Booking cancelled successfully. Redirecting...');
+                                setTimeout(() => {
+                                    window.location.href = data.redirect_url || '{{ url_for("user.profile") }}';
+                                }, 2000);
+                            } else {
+                                createFlash('error', data.error || 'Failed to cancel booking');
+                                cancelBookingBtn.disabled = false;
+                                cancelBookingBtn.textContent = originalText;
+                            }
+                        } catch (e) {
+                            createFlash('error', 'Network error while cancelling booking');
+                            cancelBookingBtn.disabled = false;
+                            cancelBookingBtn.textContent = originalText;
+                        }
+                    });
+                }
+            }
+
+            // Handle Add to Google Calendar button
+            if (addCalendarBtn) {
+                addCalendarBtn.addEventListener('click', async () => {
+                    addCalendarBtn.disabled = true;
+                    const originalText = addCalendarBtn.textContent;
+                    addCalendarBtn.textContent = 'Adding...';
+                    try {
+                        const resp = await fetch(`/calendar/add_event/{{ booking._id }}`, {method: 'POST'});
+                        const data = await resp.json();
+                        if (resp.ok && data.success) {
+                            // Show flash-style success message and disable button permanently
+                            createFlash('success', 'Added to Google Calendar ✓');
+                            addCalendarBtn.textContent = 'Added';
+                            addCalendarBtn.disabled = true;
+                        } else {
+                            createFlash('error', data.error || 'Failed to add event');
+                            addCalendarBtn.disabled = false;
+                            addCalendarBtn.textContent = originalText;
+                        }
+                    } catch (e) {
+                        createFlash('error', 'Network error while adding to calendar');
+                        addCalendarBtn.disabled = false;
+                        addCalendarBtn.textContent = originalText;
+                    }
+                });
+            }
         });
     </script>
 </body>
