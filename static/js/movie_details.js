@@ -6,7 +6,53 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backdrop && backdrop.dataset.poster) {
         backdrop.style.backgroundImage = `linear-gradient(to bottom, rgba(43, 45, 66, 0.95), rgba(43, 45, 66, 0.98)), url('${backdrop.dataset.poster}')`;
     }
+    
+    // Update showtimes counts to only include future showtimes
+    updateShowtimesCounts();
 });
+
+// Update the count of available showtimes (future only)
+function updateShowtimesCounts() {
+    const now = new Date();
+    
+    // Find all "View Showtimes" buttons
+    document.querySelectorAll('button[onclick="showTimesModal(this)"]').forEach(button => {
+        try {
+            const showtimes = JSON.parse(button.dataset.showtimes);
+            
+            // Filter to only future showtimes
+            const futureShowtimes = showtimes.filter(showtime => {
+                try {
+                    const showDateTime = new Date(`${showtime.show_date}T${showtime.show_time}:00`);
+                    return showDateTime > now;
+                } catch (e) {
+                    return true;
+                }
+            });
+            
+            // Update the showtime count in the parent card
+            const card = button.closest('.showtime-card');
+            if (card) {
+                const countElement = card.querySelector('.showtime-count');
+                if (countElement) {
+                    if (futureShowtimes.length === 0) {
+                        countElement.textContent = '🎬 No upcoming shows';
+                        countElement.style.color = '#DC2626';
+                        countElement.style.fontWeight = '500';
+                        button.disabled = true;
+                        button.style.opacity = '0.5';
+                        button.style.cursor = 'not-allowed';
+                        button.title = 'No upcoming showtimes available';
+                    } else {
+                        countElement.textContent = `🎬 ${futureShowtimes.length} show(s) available`;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error updating showtimes count:', e);
+        }
+    });
+}
 
 // Show showtime selection modal
 function showTimesModal(button) {
@@ -23,9 +69,37 @@ function showTimesModal(button) {
     // Clear previous showtimes
     container.innerHTML = '';
     
+    // Get current datetime
+    const now = new Date();
+    
+    // Filter out past showtimes
+    const futureShowtimes = showtimes.filter(showtime => {
+        try {
+            // Parse show datetime
+            const showDateTime = new Date(`${showtime.show_date}T${showtime.show_time}:00`);
+            // Keep only showtimes that haven't started yet
+            return showDateTime > now;
+        } catch (e) {
+            console.error('Error parsing showtime:', showtime, e);
+            return true; // Include if unable to parse
+        }
+    });
+    
+    // If no future showtimes, show message
+    if (futureShowtimes.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-dark);">
+                <p style="font-size: 18px; margin-bottom: 10px;">📭 No upcoming showtimes</p>
+                <p style="opacity: 0.7;">All showtimes for this theatre have already started.</p>
+            </div>
+        `;
+        modal.style.display = 'flex';
+        return;
+    }
+    
     // Group showtimes by date
     const showtimesByDate = {};
-    showtimes.forEach(showtime => {
+    futureShowtimes.forEach(showtime => {
         if (!showtimesByDate[showtime.show_date]) {
             showtimesByDate[showtime.show_date] = [];
         }
